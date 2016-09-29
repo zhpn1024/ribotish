@@ -37,7 +37,7 @@ There are 3 functions available as sub-commands.
 The main input data should be in bam file format. Reads should be trimmed and aligned to genome. Intron splicing is supported. Some attributes are needed such as NM, NH and MD. For STAR, ```--outSAMattributes All``` should be set. bam file should be sorted and indexed by samtools.
 
 quality
-~~~~~~
+~~~~~~~
 
 Quality control of riboseq bam data. This function checks reads distribution around annotated protein coding regions on user provided transcripts, show frame bias and estimate P-site offset for different group of reads. Reads are grouped by read length as well as 5' end match or mismatch. 5' end mismatch ('m0') reads often have different distribution from matched reads. To turn off 5' end mismatch grouping, use ```--nom0```. 
 
@@ -113,7 +113,7 @@ Bins for cds profile Default: 20
 Do not consider reads with mismatch at position 0 (5' end mismatch) as a new group.
 
 --th TH
-````
+```````
 
 Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be considered as low quality and this group of reads will not be used in further analysis. The offset for low quality groups will not be set in parameter file.
 
@@ -122,17 +122,17 @@ Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be co
 
 Number of processes. Default: 1
 
--v, --verbose
-```````````
+-v/--verbose
+`````````````
 
 Increase output verbosity.
 
 
 Output files
-~~~~~~~~~~~
+------------
 
 OUTPUT
-``````
+```````
 
 OUTPUT is a txt file recording all distribution data in python format for each group of reads. These distributions are shown in pdf figure file. Quality and offset estimation is based on this distribution. User can save this file for further quick estimation trying different thresholds by ```-i``` option.
 
@@ -150,6 +150,8 @@ Each row shows the RPFs with different lengths.
  - Column 3: the distribution of RPF 5’end count near annotated stop codon. 
  - Column 4: The RPF profile throughout the protein-coding regions in 3 frames. TIS enrich score (TIS count / CDS average) is also shown for TIS data.
 
+
+
 Offset parameter file
 `````````````````````
 
@@ -163,5 +165,7 @@ Other useful links
 :Cistrome: http://cistrome.org/ap/
 :bedTools: http://code.google.com/p/bedtools/
 :UCSC toolkits: http://hgdownload.cse.ucsc.edu/admin/exe/
+
+
 
 
