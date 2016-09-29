@@ -1,0 +1,10 @@
+MANIFEST
+build/*
+dist/*
+
+*.pyc
+*.txt
+*.ipynb
+
+._*
+*.bkp
