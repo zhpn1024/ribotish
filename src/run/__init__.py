@@ -1,1 +1,13 @@
-/home/pzhang3/lib/ribotish/run/__init__.py
+__all__ = ["quality","predict","tisdiff"]#,"transplot"]
+
+from . import quality, predict, tisdiff #, transplot
+'''
+command lines
+'''
+
+commands= {
+    "quality" : quality,
+    "predict" : predict,
+    "tisdiff" : tisdiff,
+    #"transplot" : transplot
+}
