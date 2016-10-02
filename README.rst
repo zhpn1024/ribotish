@@ -192,7 +192,7 @@ Input TI-seq bam data files, comma seperated.
 
 Regular riboseq bam data files, comma seperated. 
 
-At least one bam file should be provided by either '''-t''' or '''-b'''.
+At least one bam file should be provided by either ```-t``` or ```-b```.
 
 -g GENEPATH
 ```````````
@@ -363,6 +363,7 @@ This is the function for differential TIS dentification. This function uses two 
 Quick examples:
 
 ::
+
   ribotish tisdiff -1 pred1.txt -2 pred2.txt -a ltm1.bam -b ltm2.bam -g gene.gtf -o diff.txt --plotout diff.pdf
 
 Options
@@ -459,7 +460,7 @@ OUTPUT
 The output is a txt file all differential TIS results that fit the thresholds. Some of the columns are:
 
 :FoldChange:	Fold change value after normalization, 'None' if either count is 0
-:DiffPvalue:	Binomial differential test p-value, one-sided.
+:DiffPvalue:	Binomial differential test p-value, one tailed.
 :DiffQvalue:	BH correction q-value of DiffPvalue
 
 Other useful links
