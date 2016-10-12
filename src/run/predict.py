@@ -39,7 +39,7 @@ def set_parser(parser):
   #parser.add_argument("--qth", type=float, default=1, help="FDR q value threshold")
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
-  parser.add_argument("--showtime", action="store_true", help="showtime")
+  #parser.add_argument("--showtime", action="store_true", help="showtime")
 
   
 def strlist(s):
@@ -77,8 +77,8 @@ def run(args):
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
   global tpth, fpth, minpth #fspth
-  global showtime
-  showtime = args.showtime
+  #global showtime
+  #showtime = args.showtime
   tisbampaths = args.tisbampaths
   ribobampaths = args.ribobampaths
   if len(tisbampaths) == 0 and len(ribobampaths) == 0 :
@@ -240,14 +240,14 @@ def find_offset(bampaths, para):
 def _pred_trans(ps): ### trans
   '''Main function of ORF prediction in given transcript
   '''
-  if showtime : timestart = time.time()
+  #if showtime : timestart = time.time()
   t, candidates = ps
   es, j = [], 0
   tl = t.cdna_length()
   if tl < ribo.minTransLen : return es, j ##
   ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
   tribo = ribo.multiRibo(t, ribobampaths, offdict = riboffdict, compatible = compatible)
-  if showtime : time1 = time.time()
+  #if showtime : time1 = time.time()
   score = ttis.abdscore()
   ip = ribo.pidx(score, slp) 
   genome = fa.Fa(genomefapath)
@@ -278,9 +278,9 @@ def _pred_trans(ps): ### trans
       e.length = (stop - tis) / 3 - 1
       #e.sq = tsq[tis:stop]
       es.append(e)
-    if showtime : 
-      end = time.time()
-      print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
+    #if showtime : 
+      #end = time.time()
+      #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
     return es, j
   # else : all possible ORFs
   orfs = orf.orflist(tsq, minaalen = minaalen)
@@ -313,9 +313,9 @@ def _pred_trans(ps): ### trans
       #e.sq = tsq[tis:o.stop]
       es.append(e)
     j += ol
-  if showtime : 
-      end = time.time()
-      print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
+  #if showtime : 
+      #end = time.time()
+      #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
   return es, j
 
 def pvalStatus(ps) : 

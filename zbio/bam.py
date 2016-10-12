@@ -16,7 +16,9 @@ class Bamfile(pysam.Samfile):
   def fetch_reads(self, chr, start, stop) : #, multiple_iterators=False):
     if chr not in self.references : 
       chr = changechr(chr)
-      if chr not in self.references : raise StopIteration
+      if chr not in self.references : 
+        print("chr {} not found in Bamfile!".format(chr))
+        raise StopIteration
     rds = self.fetch(reference=chr, start=start, end=stop) #, multiple_iterators=multiple_iterators)
     for read in rds:
       r = Bam(read, self)

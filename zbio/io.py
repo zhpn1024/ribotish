@@ -1,8 +1,11 @@
-def splitIter(filePath, sep = '\t', gz = False):
+def splitIter(filePath, sep = '\t', gz = False, skip = 0):
+  if filePath.split('.')[-1].lower() == 'gz' : gz = True
   if gz :
     import gzip
     infile = gzip.open(filePath, 'rb')
   else : infile = open(filePath, 'r')
+  for i in range(skip):
+    l = next(infile)
   for l in infile : 
     lst = l.rstrip('\n').split(sep)
     yield lst

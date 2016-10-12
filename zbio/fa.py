@@ -1,6 +1,6 @@
 from os.path import isfile
 
-def faIter(file):
+def faIter(file, protein = False):
   id = sq = ""
   for l in file:
     l = l.strip()
@@ -11,8 +11,9 @@ def faIter(file):
       sq = ''
       id = l[1:]
     else:
-      sq += l.replace('U','T').replace('u','t')
-  yield (id,sq)
+      if not protein : l = l.replace('U','T').replace('u','t')
+      sq += l
+  yield (id, sq)
 
 def rc(seq):
   '''reverse complement

@@ -188,10 +188,21 @@ class Interval:
   def is_empty(self):
     return len(self.lst) == 0
 
-def trans2interval(t):
+def trans2interval(t, start = 0, stop = None):
   '''generate intervals for a transcript
+  start, stop are cDNA positions
   '''
-  return Interval(id = t.chr, itvs = [(e.start, e.stop) for e in t.exons])
+  i = Interval(id = t.chr, itvs = [(e.start, e.stop) for e in t.exons])
+  if start == 0 and stop is None : return i
+  s1 = t.end5
+  if start > 0 : s1 = t.genome_pos(start)
+  s2 = t.end3
+  if stop is not None : s2 = t.genome_pos(stop)
+  if s2 is None : s2 = t.end3 # = t.genome_pos(start), t.genome_pos(stop)
+  itv = [s1, s2]
+  itv.sort()
+  i.ints_itv(itv)
+  return i
   #itv = Interval(id = t.chr)
   #for e in t.exons:
     #itv.lst.append((e.start, e.stop))

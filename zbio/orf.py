@@ -157,7 +157,7 @@ def orf_by_pos(seq, pos): ### Unkown start codon, only to find stop codon
     if codon in cstop: 
       i += codonSize
       break
-  o = fixedorf(start = pos, stop = i)
+  o = FixedOrf(start = pos, stop = i)
   return o
           
 def orfDict(orflist, alt = True):
