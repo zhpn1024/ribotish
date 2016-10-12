@@ -1,6 +1,6 @@
 README for Ribo TIS Hunter (0.1.0)
 ==================================
-Time-stamp: <2016-09-30 Peng Zhang>
+Time-stamp: <2016-10-12 Peng Zhang>
 
 Introduction
 ============
@@ -270,7 +270,7 @@ Use alternative start codons. If set, all codons with 1 base different from ATG 
 --altcodons ALTCODONS
 `````````````````````
 
-Use provided alternative start codons, comma seperated, e.g. ```--altcodons CTG,GTG,ACG```. Turn on ```--alt``` option.
+Use provided alternative start codons, comma seperated, e.g. ```--altcodons CTG,GTG,ACG```. Turn on ```--alt``` option. Do not need to provide 'ATG'. Do not support 'N' bases.
 
 --tis2ribo
 ``````````
@@ -291,7 +291,7 @@ Flanking region for harr data, in codons. Default: 15. Turn on ```--harr``` opti
 --enrichtest
 ````````````
 
-Use enrich test instead of frame test. Enrich test is rank sum test between in-frame reads  inside ORF and same frame reads outside ORF.
+Use enrich test instead of frame test. Enrich test is rank sum test between in-frame reads inside ORF and same frame reads outside ORF.
 
 --nocompatible
 ``````````````
@@ -345,12 +345,12 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 :GenomePos:	Genome position and strand of TIS site, 0 based, half open
 :Start:		TIS of the ORF on transcript
 :stop:		3' end of stop codon on transcript
-:TisType:	Relative position of this TIS to annotated ORF of the transcript
+:TisType:	Relative position of this TIS to annotated ORF of the transcript. 'Novel' if no ORF annotation.
 :TISGroup:	Group of the transcript for TIS background estimation
 :TISCount:	Number of reads with P-site at TIS site
 :TISPvalue:	One tailed negative binomial test p-value for TISCount (TIS test)
-:RiboPvalue:	One tailed rank sum test p-value for regular riboseq counts bias inside ORF (frame test)
-:RiboPStatus:	For all ORFs sharing same stop codon, 'T1' means top (best) p-value, 'L1' means local best p-value, 'N' means other
+:RiboPvalue:	One tailed rank sum test p-value for regular riboseq frame bias inside ORF (frame test)
+:RiboPStatus:	For all ORFs sharing same stop codon, 'T1' means top (best) p-value, 'L1' means local best p-value, 'N' means other. All 'N' in ```-i``` mode.
 :TISQvalue:	BH correction q-value of TIS test
 :RiboQvalue:	BH correction q-value of frame test
 :AALen:		Amino acid length of the ORF
@@ -462,14 +462,4 @@ The output is a txt file all differential TIS results that fit the thresholds. S
 :FoldChange:	Fold change value after normalization, 'None' if either count is 0
 :DiffPvalue:	Binomial differential test p-value, one tailed.
 :DiffQvalue:	BH correction q-value of DiffPvalue
-
-Other useful links
-==================
-
-:Cistrome: http://cistrome.org/ap/
-:bedTools: http://code.google.com/p/bedtools/
-:UCSC toolkits: http://hgdownload.cse.ucsc.edu/admin/exe/
-
-
-
 
