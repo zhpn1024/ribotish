@@ -31,8 +31,8 @@ def set_parser(parser):
   #parser.add_argument("--maxtisnum", type=int, default=10, help="max number of TIS sites for one transcript")
   parser.add_argument("--minaalen", type=int, default=6, help="Min amino acid length of candidate ORF (default: 6)")
   parser.add_argument("--genefilter", type=strlist, help="Only process given genes")
-  parser.add_argument("--tpth", type=float, default=1, help="TIS p value threshold (default: 1)")
-  parser.add_argument("--fpth", type=float, default=1, help="Frame p value threshold (default: 1)")
+  parser.add_argument("--tpth", type=float, default=0.05, help="TIS p value threshold (default: 0.05)")
+  parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
   parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
   #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
   #parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
@@ -46,29 +46,6 @@ def strlist(s):
   '''Convert comma seperated file name string to list
   '''
   return s.split(',')
-
-use_message = '''
-python tisRibo.py [options] -g gtfpath -t tisbampath -b ribobampath -f genomefapath -o output 
-options:
--p : number of processes (1)
---parts parts : group transcript according to TIS reads density quantile (10) 
--a gtf_for_pred : GTF file for ORF prediction. Default: gtfpath
--e estpath : TIS background estimation result. (tisbampath+'.bgest.txt' if not exist)
--s inestpath : Input background estimation result file instead of instant estimation
---addchr : Auto add 'chr' for input GTF file
---tispara parapath : input parameter file for tisbam
---ribopara parapath : input parameter file for ribobam
---tis2ribo : Add TIS bam counts to ribo, if specified or -b not provided
---harr : The RPF data is treated with harringtonine (instead of LTM)
---harrwidth <int> : Flanking region for harr data TIS search, in codons (15) aa
---genefilter geneid : only process given genes
--v --verbose : show more details to STDOUT
---veryverbose : show extreme details to STDOUT
---tipth <float> : TIS p value threshold. Default: 0.05
---epth <float> : Enrichment p value threshold. Default: 1 #show all results and summarize in the next step
---fpth <float> : Frame p value threshold. Default: 1
---qth <float> : FDR q value threshold. Default: 1
-'''
 
 def run(args):
   '''Main function for ORF finding

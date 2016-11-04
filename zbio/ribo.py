@@ -1,3 +1,7 @@
+'''
+Main library for riboseq analysis in zbio/ribotish
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
 import itertools, math
 from zbio import stat, bam, gtf, exp, orf, tools, io, fa, interval
 from multiprocessing import Pool
@@ -1026,7 +1030,7 @@ def get_offset(arr, dis = [-40,20], frame = 0, defOffset = defOffset, flank = 6,
   ''' Estimate RPF P site offset distance, return offset and threshold
   '''
   a0 = [x for i, x in enumerate(arr) if (i + dis[0]) % codonSize == frame and i + dis[0] <= - defOffset - flank]
-  a1 = [x for i, x in enumerate(arr) if (i + dis[0]) % codonSize == frame and i + dis[0] > - defOffset - flank]
+  a1 = [x for i, x in enumerate(arr) if (i + dis[0]) % codonSize == frame and i + dis[0] >= - defOffset - flank]
   ai = [x for i, x in enumerate(arr) if (i + dis[0]) % codonSize == frame and i + dis[0] > - defOffset - flank and i + dis[0] < - defOffset + flank]
   #a0.sort()
   #a1.sort()

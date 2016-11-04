@@ -242,8 +242,8 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
   ax3 = plot.subplot(gs[i, start+5])
   cdsplot(ax3, disc[l])
   if args.tis : 
-    bins = len(disc[l][frame])
-    mean = sum(disc[l][frame]) / bins
+    bins = len(disc[l][tisframe])
+    mean = sum(disc[l][tisframe]) / bins
     if mean == 0 : enrich = 0
     else : enrich = dis1[l][mp - args.dis[0]] / mean
     if i == 0 : enrtxt = 'TIS\nenrich\n%.1f' % enrich

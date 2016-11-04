@@ -1,3 +1,8 @@
+'''
+Statistics tools
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 import math
 from scipy.stats import nbinom, chisquare, chisqprob
 logarr = [None] # log(N)

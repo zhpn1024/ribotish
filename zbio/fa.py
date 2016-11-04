@@ -1,3 +1,8 @@
+'''
+Fasta format file processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 from os.path import isfile
 
 def faIter(file, protein = False):

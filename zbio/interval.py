@@ -1,3 +1,8 @@
+'''
+Intervals processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 def is_overlap(i1, i2):
   return i1[0] < i2[1] and i1[1] > i2[0]
 
@@ -258,3 +263,13 @@ def cds_region_gene(g):
       cr[i] += tcr[i]
   return cr
 
+def allTransRegions(trans):
+  regions = {}
+  for t in trans :
+    transitv = trans2interval(t)
+    if t.chr not in regions : regions[t.chr] = Interval(id = t.chr)
+    regions[t.chr].lst += transitv.lst
+  for chr in regions: regions[t.chr].check()
+  return regions
+
+        

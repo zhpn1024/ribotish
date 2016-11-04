@@ -5,15 +5,15 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 This code is free software; you can redistribute it and/or modify it
 under the terms of the BSD License (see the file COPYING included with
 the distribution).
-@status: under construction
+@status: experimental
 @version: 0.1.0
 @author:  Peng Zhang
 @contact: zhpn1024@163.com
 """
-
 import os, sys, argparse, time
 from ribotish import __version__ as VERSION
 from ribotish.run import commands
+
 # ------------------------------------
 # Main function
 # ------------------------------------

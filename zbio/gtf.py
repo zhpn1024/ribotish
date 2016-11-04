@@ -1,3 +1,8 @@
+'''
+Gtf format annotation processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 def add_chr(chr):
   if chr.isdigit() or chr in ('X','Y','M',): chr = 'chr' + chr
   elif chr == 'MT' : chr = 'chrM' 
@@ -483,6 +488,7 @@ def load_gtf(fin, filt = [], gff = False, addchr = False, verbose = False):
   for l in fin:
     if l[0] == '#' : continue
     lst=l.strip().split('\t')
+    if len(lst) < 2 : continue
     if lst[0] != chr :
       ks = list(dfilt.keys())
       for k in ks : 
@@ -532,6 +538,7 @@ def fetch_gtf(fin, gid = '', tid = '', gff = False, addchr = False):
   for l in fin:
     if l[0] == '#' : continue
     lst=l.strip().split('\t')
+    if len(lst) < 2 : continue
     if ch != '' and ch != lst[0] : break
     if gid != '' and lst[8].find(gid) < 0 : continue
     if tid != '' and lst[8].find(tid) < 0 : continue
@@ -575,6 +582,7 @@ def gtfgene_iter(fin, filt = [], gff = False, addchr = False, chrs = None, verbo
   for l in fin:
     if l[0] == '#' : continue
     lst=l.strip().split('\t')
+    if len(lst) < 2 : continue
     if lst[2] == 'region' : continue
     if lst[0] != chr:
       if chrs is not None and lst[0] not in chrs : continue
@@ -656,6 +664,7 @@ def gtftrans_iter(fin, filt = [], gff = False, addchr = False, chrs = None, verb
   for l in fin:
     if l[0] == '#' : continue
     lst=l.strip().split('\t')
+    if len(lst) < 2 : continue
     if lst[2] == 'region' : continue
     if lst[0] != chr:
       if chrs is not None and lst[0] not in chrs : continue

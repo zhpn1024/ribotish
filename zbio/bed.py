@@ -1,3 +1,7 @@
+'''
+Bed format annotation processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
 class Bed3:
   ''' Bed3 class for bed3 annotation format, father of Bed6
   '''

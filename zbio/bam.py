@@ -1,3 +1,7 @@
+'''
+Bam file and reads processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
 import pysam
 import bed
 
@@ -13,7 +17,7 @@ def changechr(chr):
 class Bamfile(pysam.Samfile):
   def __repr__(self):
     return 'pysam.Samfile '+self.filename
-  def fetch_reads(self, chr, start, stop) : #, multiple_iterators=False):
+  def fetch_reads(self, chr, start, stop, maxNH = None, minMapQ = None, secondary = False) : #, multiple_iterators=False):
     if chr not in self.references : 
       chr = changechr(chr)
       if chr not in self.references : 
@@ -21,6 +25,11 @@ class Bamfile(pysam.Samfile):
         raise StopIteration
     rds = self.fetch(reference=chr, start=start, end=stop) #, multiple_iterators=multiple_iterators)
     for read in rds:
+      try: 
+        if maxNH is not None and read.get_tag('NH') > maxNH : continue
+      except: pass
+      if not secondary and read.is_secondary : continue
+      if minMapQ is not None and read.mapping_quality < minMapQ : continue
       r = Bam(read, self)
       yield r
 
@@ -60,7 +69,9 @@ class Bam():#AlignedRead
   @property
   def cigar(self): 
     return self.read.cigar
-  
+  @property
+  def weight(self): 
+    return 1
   def __len__(self): #All bed
     return self.read.alen
   @property
@@ -74,6 +85,9 @@ class Bam():#AlignedRead
   
   def cdna_length(self): 
     return self.read.qlen
+    #for ctype, l in self.cigar:
+      #if ctype == 4 : s -= l
+    #return s
   
   def center(self): #Middle point, NEED REVISE!!
     return (self.start+self.stop)/2.0
@@ -134,7 +148,7 @@ class Bam():#AlignedRead
         else:
           pos += l
           p1 -= l
-      elif ctype in [1,4]: # I: insertion to the reference, S: soft clipping
+      elif ctype in [1,]:#4]: # I: insertion to the reference, S: soft clipping
         if l - p1 >= bias: return pos
         else: p1 -= l
       elif ctype in [2,3]: # D: deletion from the reference, N: skipped region from the reference
@@ -150,7 +164,7 @@ class Bam():#AlignedRead
       if ctype in [0,7,8]:
         pos += l
         p += l
-      elif ctype in [1,4]:
+      elif ctype in [1]:#,4]:
         p += l
       elif ctype in [2]:
         pos += l
@@ -172,7 +186,7 @@ class Bam():#AlignedRead
       if ctype in [0,7,8]:
         d += l
         p += l
-      elif ctype in [1,4]:
+      elif ctype in [1]:#,4]:
         p += l
       elif ctype in [2]:
         d += l
@@ -186,25 +200,31 @@ class Bam():#AlignedRead
     if self.is_reverse():
       return s[::-1]
     return s
-  def isCompatible(self, trans, mis = 0):
+  def isCompatible(self, transitv, mis = 0):
     '''if compatible with given transcript, allow some (mis) incompatible bases
     '''
     from . import interval
-    transitv = interval.trans2interval(trans)
+    if transitv.__class__.__name__ != 'Interval' : 
+      transitv = interval.trans2interval(transitv)
+    r1 = self.start
+    r2 = r1 + sum([l for ctype, l in self.cigar])
+    ri = interval.Interval(r1, r2) # full reads region
+    ti = ri.intersect(transitv) #interval.trans2interval(trans)
+    start, stop = ti.start, ti.stop
     m = 0
     pos = self.start
     for ctype, l in self.cigar:
       if ctype in [0,7,8]: # M: alignment match, =: sequence match, X: sequence mismatch
-        p1, p2 = max(pos, trans.start), min(pos + l, trans.stop)
+        p1, p2 = max(pos, start), min(pos + l, stop)
         pos += l
         if p1 < p2 : 
           ci = interval.Interval(p1, p2)
           itv = ci.intersect(transitv)
           m += p2 - p1 - itv.rlen()
-      elif ctype in [1,4]: # I: insertion to the reference, S: soft clipping
-        if trans.start < pos < trans.stop : m += l
+      elif ctype in [1]:#,4]: # I: insertion to the reference, S: soft clipping
+        if start < pos < stop : m += l
       elif ctype in [2,3]: # D: deletion from the reference, N: skipped region from the reference
-        p1, p2 = max(pos, trans.start), min(pos + l, trans.stop)
+        p1, p2 = max(pos, start), min(pos + l, stop)
         pos += l
         if p1 < p2 : 
           ci = interval.Interval(p1, p2)
@@ -269,9 +289,11 @@ class Bam():#AlignedRead
     '''
     if self.strand == '+' : 
       if self.get_tag('MD')[0] == '0' : return True # mismatch at 0
+      elif self.cigar[0][0] == 4 : return True
       else : return False
     elif self.get_tag('MD')[-1] == '0' : 
       if not self.get_tag('MD')[-2].isdigit() : return True
+      elif self.cigar[-1][0] == 4 : return True
     return False
 def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False): 
   '''compatible version of transReadsIter, slightly different
@@ -306,21 +328,176 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
   if chr not in bamfile.references : 
       chr = changechr(chr)
       if chr not in bamfile.references : raise StopIteration
+  if compatible : 
+    from . import interval
+    transitv = interval.trans2interval(trans)
   used = {}
   #trans.exons = trans.exons ##
   for e in trans.exons : 
-    rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop)#, multiple_iterators=False)
+    rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary)#, multiple_iterators=False)
     for read in rds: #yield read
       #read = Bam(r, bamfile)
       if (read.id, read.start) in used : continue
       if sense and read.strand != trans.strand : continue
-      try: 
-        if maxNH is not None and read.read.get_tag('NH') > maxNH : continue
-      except: pass
-      if not secondary and read.is_secondary : continue
-      if minMapQ is not None and read.read.mapping_quality < minMapQ : continue
+      #try: 
+        #if maxNH is not None and read.read.get_tag('NH') > maxNH : continue
+      #except: pass
+      #if not secondary and read.is_secondary : continue
+      #if minMapQ is not None and read.read.mapping_quality < minMapQ : continue
       #o = read.read.get_overlap(trans.start, trans.stop)
       #if o < read.cdna_length() - mis: continue
       if read.start <= e.start or read.stop >= e.stop : used[(read.id, read.start)] = 1 # for reads across exons
-      if compatible and not read.isCompatible(trans = trans, mis = mis) : continue
+      if compatible and not read.isCompatible(transitv = transitv, mis = mis) : continue
       yield read
+
+def end5(r):
+  return r.end5
+
+class BamLoad:
+  def __init__(self, bampath, transRegions = None, posFunc = end5, numProc = 1, pool = None, maxNH = None, minMapQ = None, secondary = False, verbose = False):
+    self.bamloads = {}
+    self.bampath = bampath
+    if bampath is None : return
+    self.regions = transRegions
+    #if verbose : print('Loading reads...')
+    #import itertools
+    if numProc >= 1 and pool is None :
+      from multiprocessing import Pool
+      pool = Pool(processes = numProc)
+    if self.regions is not None :
+      paras = [(bampath, chr, self.regions[chr], '.', posFunc, maxNH, minMapQ, secondary) for chr in self.regions]
+      #for chr in self.regions:
+        #self.bamloads[chr] = BamLoadChr(bampath, chr, self.regions[chr], '.', numProc, pool, posFunc, maxNH, minMapQ, secondary)
+    else :
+      bamfile = Bamfile(bampath)
+      paras = [(bampath, chr, None, '.', posFunc, maxNH, minMapQ, secondary) for chr in bamfile.references]
+    #if numProc <= 1 : load_iter = itertools.imap(getBamLoadChr, paras)
+    #else : 
+      #load_iter = pool.imap_unordered(getBamLoadChr, paras, chunksize = 1)
+    loads = pool.map(getBamLoadChr, paras, chunksize = 1)
+    #results = []
+    #if self.regions is not None :
+      #for chr in self.regions :
+        #results.append(pool.apply_async(BamLoadChr, (bampath, chr, self.regions[chr], '.', posFunc, maxNH, minMapQ, secondary)))
+    #else : 
+      #bamfile = Bamfile(bampath)
+      #for chr in bamfile.references :
+        #results.append(pool.apply_async(BamLoadChr, (bampath, chr, None, '.', posFunc, maxNH, minMapQ, secondary)))
+      #n = len(bamfile.references)
+      #paras = [bampath]*n, bamfile.references, [None]*n, ['.']*n, [posFunc]*n, [maxNH]*n, [minMapQ]*n, [secondary]*n
+      #paras = [(bampath, chr, None, '.', posFunc, maxNH, minMapQ, secondary) for chr in bamfile.references]
+    #loads = map(BamLoadChr, paras)
+    
+    
+    #loads = [pool.apply_async(BamLoadChr, (bampath, chr, self.regions[chr], '.', posFunc, maxNH, minMapQ, secondary)) for chr in self.regions]
+    #loads = pool.imap_unordered(get_BamLoadChr, paras, chunksize = 1)
+    #pool.close()
+    #pool.join()
+    for blc in loads:
+      self.bamloads[blc.chr] = blc
+    #pool.close()
+    #pool.join()
+    #for blc in loads : self.bamloads[blc.chr] = blc
+
+  def merge(self, other):
+    for chr in other.bamloads:
+      if chr not in self.bamloads: self.bamloads[chr] = BamLoadChr(None, chr)#other.bamloads[chr]
+      self.bamloads[chr].merge(other.bamloads[chr])
+  def transCounts(self, trans, compatible = False, mis = 2):
+    return self.bamloads[trans.chr].transCounts(trans, compatible = compatible, mis = mis)
+
+def getBamLoadChr(args):
+  bampath, chr, region, strand, posFunc, maxNH, minMapQ, secondary = args
+  return BamLoadChr(bampath, chr, region, strand, posFunc, maxNH, minMapQ, secondary)
+
+class BamLoadChr:
+  def __init__(self, bampath, chr, region = None, strand = '.', posFunc = end5, maxNH = None, minMapQ = None, secondary = False):
+    self.chr = chr
+    self.strand = strand
+    self.bampath = bampath
+    self.region = region
+    if strand == '.' : self.data = {'+':{}, '-':{}}
+    else : self.data = {strand:{}}
+    if bampath is None : return
+    bamfile = Bamfile(bampath)
+    if chr not in bamfile.references : 
+      chr = changechr(chr)
+      if chr not in self.references : 
+        print("chr {} not found in Bamfile!".format(self.chr))
+        return
+    if region is None : region = [[None, None]]
+    for start, stop in region : 
+      for r in bamfile.fetch_reads(chr, start, stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
+        if r.strand not in self.data : continue
+        p = posFunc(r)
+        if start is not None and p < start : continue
+        if stop is not None and p > stop : continue
+        if p not in self.data[r.strand] : self.data[r.strand][p] = {}
+        key = r.start, tuple(r.cigar)
+        #print key
+        if key not in self.data[r.strand][p] : self.data[r.strand][p][key] = 0
+        self.data[r.strand][p][key] += 1
+  def __repr__(self):
+    return 'BamLoad {}:{}:{}'.format(self.filename, self.chr, self.strand)
+  def transCounts(self, trans, compatible = False, mis = 2):
+    if self.strand != '.' and self.strand != trans.strand :
+      print('Strand not match: {}, {}'.format(self, trans.id))
+      return
+    d = self.data[trans.strand]
+    if compatible : 
+      from . import interval
+      transitv = interval.trans2interval(trans)
+    if trans.strand != '-' : step = 1
+    else : step = -1
+    cnts = [0] * trans.cdna_length()
+    for e in trans.exons:
+      p = e.end5
+      i = trans.cdna_pos(p)
+      for j in range(len(e)):
+        if p in d :
+          if compatible :
+            for key in d[p]:
+              if self._compatible(key, transitv, mis = mis) : cnts[i] += d[p][key]
+          else : cnts[i] = sum(d[p].values())
+        i += 1
+        p += step
+    return cnts
+  def _compatible(self, key, transitv, mis = 2):
+    '''if compatible with given transcript, allow some (mis) incompatible bases
+    '''
+    from . import interval
+    r1 = key[0]
+    r2 = r1 + sum([l for ctype, l in key[1]])
+    ri = interval.Interval(r1, r2) # full reads region
+    ti = ri.intersect(transitv) #interval.trans2interval(trans)
+    start, stop = ti.start, ti.stop
+    m = 0
+    pos = key[0] # self.start
+    for ctype, l in key[1] : #self.cigar:
+      if ctype in [0,7,8]: # M: alignment match, =: sequence match, X: sequence mismatch
+        p1, p2 = max(pos, start), min(pos + l, stop)
+        pos += l
+        if p1 < p2 : 
+          ci = interval.Interval(p1, p2)
+          itv = ci.intersect(ti)
+          m += p2 - p1 - itv.rlen()
+      elif ctype in [1]:#,4]: # I: insertion to the reference, S: soft clipping
+        if start < pos < stop : m += l
+      elif ctype in [2,3]: # D: deletion from the reference, N: skipped region from the reference
+        p1, p2 = max(pos, start), min(pos + l, stop)
+        pos += l
+        if p1 < p2 : 
+          ci = interval.Interval(p1, p2)
+          itv = ci.intersect(ti)
+          m += itv.rlen()
+      if m > mis : return False
+    return True
+  def merge(self, other):
+    for s in other.data:
+      if s not in self.data : self.data[s] = {}
+      for p in other.data[s]:
+        if p not in self.data[s] : self.data[s][p] = {}
+        for key in other.data[s][p]:
+          if key not in self.data[s][p] : self.data[s][p][key] = 0
+          self.data[s][p][key] += other.data[s][p][key]
+        

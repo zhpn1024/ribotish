@@ -1,16 +1,16 @@
 #!/usr/bin/python
-#Last-modified: 29 Jul 2016 02:03:55 PM
+#Last-modified: 4 Nov 2016 04:03:55 PM
 
 #         Module/Scripts Description
 # 
-# Copyright (c) 2008 Peng Zhang <zhpn1024@163.com>
+# Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 # 
 # This code is free software; you can redistribute it and/or modify it
 # under the terms of the BSD License (see the file COPYING included with
 # the distribution).
 # 
 # @status:  experimental
-# @version: 0.1.0
+# @version: 0.1.1
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 
@@ -38,16 +38,18 @@ from setuptools import setup, find_packages, Extension
 # ------------------------------------
 
 if __name__ == '__main__':
-    if float(sys.version[:3])<2.7 or float(sys.version[:3])>=2.8:
-        sys.stderr.write("CRITICAL: Python version must be 2.7!\n")
+    if float(sys.version[:3])<2.7 : #  or float(sys.version[:3])>=2.8:
+        sys.stderr.write("CRITICAL: Python version must be 2.7 or higher!\n")
         sys.exit(1)
 
     # includepy = "%s/include/python%s" % (sys.prefix, sys.version[:3])
     with open("README.rst",'r') as fh:
         long_description = fh.read()
     # ngslib version
-    with open('RELEASE','r') as fh:
-        PROG, VERSION = fh.next().split()[:2]
+    from src import __version__ as VERSION
+    PROG = 'ribotish'
+    #with open('RELEASE','r') as fh:
+        #PROG, VERSION = fh.next().split()[:2]
 
     # Compile Kent lib
     if 'clean' in sys.argv:
@@ -70,7 +72,7 @@ if __name__ == '__main__':
           version=VERSION,
           author='Peng Zhang',
           author_email='zhpn1024@163.com',
-          url='https://github.com/zhpn1024',
+          url='https://github.com/zhpn1024/ribotish',
           license="GNU General Public License (GPL)",
           keywords = "Python, Riboseq, translation",
           description = ("Python Modules for Riboseq data analysis."),

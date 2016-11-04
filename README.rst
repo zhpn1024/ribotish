@@ -311,12 +311,12 @@ Only process given genes. Comma separated.
 --tpth TPTH
 ```````````
 
-TIS p value threshold. Default: 1.
+TIS p value threshold. Default: 0.05.
 
 --fpth FPTH
 ```````````
 
-Frame p value threshold. Default: 1.
+Frame p value threshold. Default: 0.05.
 
 
 --minpth MINPTH

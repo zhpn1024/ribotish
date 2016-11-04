@@ -1,11 +1,22 @@
-def splitIter(filePath, sep = '\t', gz = False, skip = 0):
-  if filePath.split('.')[-1].lower() == 'gz' : gz = True
-  if gz :
-    import gzip
-    infile = gzip.open(filePath, 'rb')
-  else : infile = open(filePath, 'r')
+'''
+File processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
+def splitIter(filePath, sep = '\t', gz = False, skip = 0, title = None):
+  if type(filePath) is str :
+    if filePath.split('.')[-1].lower() == 'gz' : gz = True
+    if gz :
+      import gzip
+      infile = gzip.open(filePath, 'rb')
+    else : infile = open(filePath, 'r')
+  else : infile = filePath
   for i in range(skip):
     l = next(infile)
+  if title is not None : 
+    l = next(infile)
+    lst = l.rstrip('\n').split(sep)
+    title[:] = lst
   for l in infile : 
     lst = l.rstrip('\n').split(sep)
     yield lst
@@ -91,3 +102,12 @@ def suffixType(filePath, gz = False):
   elif suffix in ('gpd', 'genepred') : fileType = 'gpd'
   else : raise IOError('Unknown trans file format: {}'.format(filePath))
   return fileType
+
+def tabjoin(a, *args) : #, sep = '\t'):
+  sep = '\t'
+  if hasattr(a, '__iter__') :s = sep.join(map(str, a))
+  else : s = str(a)
+  for a in args :
+    if hasattr(a, '__iter__') : s += sep + sep.join(map(str, a))
+    else : s += sep + str(a)
+  return s

@@ -1,3 +1,8 @@
+'''
+Expression profile processing
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 import math
 class Exp(): #values for one gene/trans/probe
   '''expression values for one gene/transcript

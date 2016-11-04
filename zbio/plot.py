@@ -1,3 +1,8 @@
+'''
+Some plot functions
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
+
 import matplotlib
 matplotlib.use('pdf')
 from matplotlib.pylab import *

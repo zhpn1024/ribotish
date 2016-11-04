@@ -1,3 +1,7 @@
+'''
+Some useful tools
+Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+'''
 
 Nt=['A','C','G','T']
 
