@@ -34,6 +34,7 @@ def set_parser(parser):
   parser.add_argument("--tpth", type=float, default=0.05, help="TIS p value threshold (default: 0.05)")
   parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
   parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
+  parser.add_argument("--framebest", action="store_true", help="Only report local best frame test results")
   #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
   #parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
   #parser.add_argument("--qth", type=float, default=1, help="FDR q value threshold")
@@ -53,7 +54,7 @@ def run(args):
   # prepare
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
-  global tpth, fpth, minpth #fspth
+  global tpth, fpth, minpth, framebest#fspth
   #global showtime
   #showtime = args.showtime
   tisbampaths = args.tisbampaths
@@ -73,7 +74,7 @@ def run(args):
   if args.altcodons is not None : 
     alt = True
     orf.cstartlike = [c.upper() for c in args.altcodons]
-  tpth, fpth, minpth = args.tpth, args.fpth, args.minpth # fspth
+  tpth, fpth, minpth, framebest = args.tpth, args.fpth, args.minpth, args.framebest # fspth
   tis2ribo = args.tis2ribo
   parts = [0.1 * (i+1) for i in range(args.nparts)]
   gfilter = None
@@ -281,6 +282,7 @@ def _pred_trans(ps): ### trans
       minp = rps[i]
       if tps[i] is not None and tps[i] < minp : minp = tps[i]
       if minp > minpth : continue
+      if framebest and rst[i] == 'N' : continue
       tistype = tisType(tis, o.stop, cds1, cds2)
       orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
       tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
