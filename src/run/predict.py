@@ -34,7 +34,11 @@ def set_parser(parser):
   parser.add_argument("--tpth", type=float, default=0.05, help="TIS p value threshold (default: 0.05)")
   parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
   parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
-  parser.add_argument("--framebest", action="store_true", help="Only report local best frame test results")
+  parser.add_argument("--framelocalbest", action="store_true", help="Only report local best frame test results")
+  parser.add_argument("--framebest", action="store_true", help="Only report best frame test results")
+  parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
+  parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
+  parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
   #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
   #parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
   #parser.add_argument("--qth", type=float, default=1, help="FDR q value threshold")
@@ -54,9 +58,10 @@ def run(args):
   # prepare
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
-  global tpth, fpth, minpth, framebest#fspth
+  global tpth, fpth, minpth, framebest, framelocalbest#fspth
   #global showtime
   #showtime = args.showtime
+  ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   tisbampaths = args.tisbampaths
   ribobampaths = args.ribobampaths
   if len(tisbampaths) == 0 and len(ribobampaths) == 0 :
@@ -74,7 +79,7 @@ def run(args):
   if args.altcodons is not None : 
     alt = True
     orf.cstartlike = [c.upper() for c in args.altcodons]
-  tpth, fpth, minpth, framebest = args.tpth, args.fpth, args.minpth, args.framebest # fspth
+  tpth, fpth, minpth, framebest, framelocalbest = args.tpth, args.fpth, args.minpth, args.framebest, args.framelocalbest # fspth
   tis2ribo = args.tis2ribo
   parts = [0.1 * (i+1) for i in range(args.nparts)]
   gfilter = None
@@ -141,7 +146,7 @@ def run(args):
     for l in infile :
       lst = l.strip().split()
       tid, tis, stop = lst[0], int(lst[1]), int(lst[2])
-      if gfilter is not None and tid not in gfilter : continue
+      #if gfilter is not None and tid not in gfilter : continue
       if tid not in inorf : inorf[tid] = []
       inorf[tid].append([tis, stop])
   print("Predicting...")
@@ -150,14 +155,14 @@ def run(args):
   title = ['TISGroup', 'TISCounts', 'TISPvalue', 'RiboPvalue', 'RiboPStatus']
   j = 0
   #agenefile = open(args.agenepath,'r')
-  trans_iter = io.transIter(args.agenepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
-  para_iter = transPara(trans_iter, inorf)
+  gene_iter = io.geneIter(args.agenepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
+  para_iter = genePara(gene_iter, inorf)
   #para_iter = itertools.izip(gene_iter, itertools.repeat(paras), itertools.repeat(slp))
-  if args.numProc <= 1 : pred_iter = itertools.imap(_pred_trans, para_iter)
+  if args.numProc <= 1 : pred_iter = itertools.imap(_pred_gene, para_iter)
   else : 
     from multiprocessing import Pool
     pool = Pool(processes = args.numProc - 1)
-    pred_iter = pool.imap_unordered(_pred_trans, para_iter, chunksize = 5)
+    pred_iter = pool.imap_unordered(_pred_gene, para_iter, chunksize = 5)
   for result in pred_iter:
     es, ji = result
     j += ji
@@ -182,18 +187,21 @@ def run(args):
   #end = time.time()
   #print('Time used: %s' % str(end - start))
 
-def transPara(trans_iter, inorf):
-  '''Generate parameters (trans, candidates/None) for function _pred_trans()
+def genePara(gene_iter, inorf):
+  '''Generate parameters (gene, candidates/None) for function _pred_gene()
   '''
   if inorf is not None :
-    for t in trans_iter:
-      if t.id in inorf : yield t, inorf[t.id]
+    for g in gene_iter:
+      cand = {}
+      for t in g.trans:
+        if t.id in inorf : cand[t.id] = inorf[t.id] #yield t, inorf[t.id]
+      if len(cand) > 0 : yield g, cand
   else :
     #i = 0
-    for t in trans_iter: 
+    for g in gene_iter: 
       if gfilter is not None :
-        if t.id not in gfilter or t.gid not in gfilter : continue
-      yield t, None
+        if g.id not in gfilter : continue # or t.gid not in gfilter : continue
+      yield g, None
       #i += 1
       #if i >= 10 : break
 #offdict = None
@@ -215,83 +223,89 @@ def find_offset(bampaths, para):
     
 
 
-def _pred_trans(ps): ### trans
+def _pred_gene(ps): ### trans
   '''Main function of ORF prediction in given transcript
   '''
   #if showtime : timestart = time.time()
-  t, candidates = ps
+  g, candidates = ps
   es, j = [], 0
-  tl = t.cdna_length()
-  if tl < ribo.minTransLen : return es, j ##
-  ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
-  tribo = ribo.multiRibo(t, ribobampaths, offdict = riboffdict, compatible = compatible)
-  #if showtime : time1 = time.time()
-  score = ttis.abdscore()
-  ip = ribo.pidx(score, slp) 
   genome = fa.Fa(genomefapath)
-  if len(tisbampaths) > 0 and tis2ribo : tribo.merge(ttis) ##
-  if verbose >= 2 : print g.id, t.id, ttis.total, tribo.total
-  cds1 = t.cds_start(cdna = True) 
-  cds2 = t.cds_stop(cdna = True) 
-  tsq = genome.transSeq(t)
+  tismbl = ribo.multiRiboGene(g, tisbampaths, offdict = tisoffdict, compatible = compatible)
+  ribombl = ribo.multiRiboGene(g, ribobampaths, offdict = riboffdict, compatible = compatible)
+  for t in g.trans:
+    if candidates is not None and t.id not in candidates : continue
+    tl = t.cdna_length()
+    if tl < ribo.minTransLen : return es, j ##
+    #ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
+    #tribo = ribo.multiRibo(t, ribobampaths, offdict = riboffdict, compatible = compatible)
+    ttis = ribo.Ribo(t, bamload = tismbl)
+    tribo = ribo.Ribo(t, bamload = ribombl)
+    #print t.symbol, t.gid, t.id, tribo.total, ribombl.data
+    #if showtime : time1 = time.time()
+    score = ttis.abdscore()
+    ip = ribo.pidx(score, slp) 
+  
+    if len(tisbampaths) > 0 and tis2ribo : tribo.merge(ttis) ##
+    if verbose >= 2 : print g.id, t.id, ttis.total, tribo.total
+    cds1 = t.cds_start(cdna = True) 
+    cds2 = t.cds_stop(cdna = True) 
+    tsq = genome.transSeq(t)
   # user provided candidates
-  if candidates is not None : 
-    for tis, stop in candidates:
-      j += 1
-      if len(tisbampaths) > 0 : tp = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
-      else : tp = None
-      if enrichtest : rp = tribo.enrich_test(tis, stop)
-      else : rp = tribo.frame_test(tis, stop)
-      #fisher = stat.fisher_method([tp, rp])[0]
-      if tp is not None and tp > tpth : continue 
-      if rp > fpth : continue # or fisher > fspth 
-      minp = rp
-      if tp is not None and tp < minp : minp = tp
-      if minp > minpth : continue
-      tistype = tisType(tis, stop, cds1, cds2)
-      orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,stop)
-      tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
-      values = [ip, ttis.cnts[tis], tp, rp, 'N']
-      e = exp.Exp(tid, values)
-      e.length = (stop - tis) / 3 - 1
-      #e.sq = tsq[tis:stop]
-      es.append(e)
+    if candidates is not None : 
+      for tis, stop in candidates[t.id]:
+        j += 1
+        if len(tisbampaths) > 0 : tp = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
+        else : tp = None
+        if enrichtest : rp = tribo.enrich_test(tis, stop)
+        else : rp = tribo.frame_test(tis, stop)
+        if tp is not None and tp > tpth : continue 
+        if rp > fpth : continue # or fisher > fspth 
+        minp = rp
+        if tp is not None and tp < minp : minp = tp
+        if minp > minpth : continue
+        tistype = tisType(tis, stop, cds1, cds2)
+        orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,stop)
+        tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
+        values = [ip, ttis.cnts[tis], tp, rp, 'N']
+        e = exp.Exp(tid, values)
+        e.length = (stop - tis) / 3 - 1
+        #e.sq = tsq[tis:stop]
+        es.append(e)
     #if showtime : 
       #end = time.time()
       #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
-    return es, j
-  # else : all possible ORFs
-  orfs = orf.orflist(tsq, minaalen = minaalen)
-  for o in orfs :
-    starts = o.starts
-    if alt : starts += o.altstarts
-    starts.sort()
-    ol = len(starts)
-    tps = [None] * ol
-    rps = [None] * ol
-    #fishers = [None] * ol
-    for i, tis in enumerate(starts) : 
-      if len(tisbampaths) > 0 : tps[i] = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
-      if enrichtest : rps[i] = tribo.enrich_test(tis, o.stop)
-      else : rps[i] = tribo.frame_test(tis, o.stop)
-      #fishers[i] = stat.fisher_method([tps[i], rps[i]])[0]
-    rst = pvalStatus(rps)
-    for i, tis in enumerate(starts) : 
-      if tps[i] is not None and tps[i] > tpth : continue
-      if rps[i] > fpth : continue # or fishers[i] > fspth
-      minp = rps[i]
-      if tps[i] is not None and tps[i] < minp : minp = tps[i]
-      if minp > minpth : continue
-      if framebest and rst[i] == 'N' : continue
-      tistype = tisType(tis, o.stop, cds1, cds2)
-      orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
-      tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
-      values = [ip, ttis.cnts[tis], tps[i], rps[i], rst[i]] # , fishers[i]]
-      e = exp.Exp(tid, values)
-      e.length = (o.stop - tis) / 3 - 1
-      #e.sq = tsq[tis:o.stop]
-      es.append(e)
-    j += ol
+    #return es, j
+    else : #all possible ORFs
+      orfs = orf.orflist(tsq, minaalen = minaalen)
+      for o in orfs :
+        starts = o.starts
+        if alt : starts += o.altstarts
+        starts.sort()
+        ol = len(starts)
+        tps = [None] * ol
+        rps = [None] * ol
+        for i, tis in enumerate(starts) : 
+          if len(tisbampaths) > 0 : tps[i] = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
+          if enrichtest : rps[i] = tribo.enrich_test(tis, o.stop)
+          else : rps[i] = tribo.frame_test(tis, o.stop)
+        rst = pvalStatus(rps)
+        for i, tis in enumerate(starts) : 
+          if tps[i] is not None and tps[i] > tpth : continue
+          if rps[i] > fpth : continue # or fishers[i] > fspth
+          minp = rps[i]
+          if tps[i] is not None and tps[i] < minp : minp = tps[i]
+          if minp > minpth : continue
+          if framelocalbest and rst[i] == 'N' : continue
+          if framebest and rst[i][0] != 'T' : continue
+          tistype = tisType(tis, o.stop, cds1, cds2)
+          orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
+          tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
+          values = [ip, ttis.cnts[tis], tps[i], rps[i], rst[i]] # , fishers[i]]
+          e = exp.Exp(tid, values)
+          e.length = (o.stop - tis) / 3 - 1
+          #e.sq = tsq[tis:o.stop]
+          es.append(e)
+        j += ol
   #if showtime : 
       #end = time.time()
       #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
@@ -310,7 +324,8 @@ def pvalStatus(ps) :
     elif p < m : m, c = p, 1
     elif p == m : c += 1
   if m >= 1 : return st
-  top = 'T{}'.format(c)
+  top = 'T'
+  if c > 1 : top = 'T{}'.format(c)
   last, c = 1, 1
   better = True
   for i, p in enumerate(cp): 
@@ -322,7 +337,8 @@ def pvalStatus(ps) :
     elif p == last : c += 1
     else : 
       if better and last > m : 
-        local = 'L{}'.format(c)
+        local = 'L'
+        if c > 1 : local = 'L{}'.format(c)
         for j in range(i-c, i) : st[j] = local
       better = False
       c = 1

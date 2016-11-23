@@ -171,8 +171,9 @@ class Interval:
     if start is None : start = self.end5(strand)
     i = start
     if strand == '-' : step = -step
-    while self.is_inside(i, strand=strand) : 
-      yield i
+    s1, s2 = self.start, self.stop
+    while s1 <= i <= s2 : 
+      if self.is_inside(i, strand=strand) : yield i
       i += step
     #for i in range(start, self.stop, step):
       #if self.is_inside(i) : yield i

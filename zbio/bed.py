@@ -135,7 +135,11 @@ class Bed3:
   @property
   def introns(self): # No intron, empty
     return []
-
+  @property
+  def trans(self):
+    return [self]
+  def merge_trans(self):
+    return self
   def is_contain(self, p, strict = False): # all bed
     if self.start <= p <= self.stop :
       if not strict : return True
@@ -533,6 +537,52 @@ def gpd_iter(file, filt = [], chrs = None, verbose = False): #refFlat_iter(file)
     yield bed
 refFlat_iter = gpd_iter
 
+class gpdGene:
+  '''genepred gene
+  '''
+  def __init__(self, id = '', b = None):
+    if b is None :
+      self.trans = []
+      self.chr, self.start, self.stop, self.strand = '', None, None, '.'
+      self.id = id
+    else : 
+      self.trans = [b]
+      self.chr, self.start, self.stop, self.strand = b.chr, b.start, b.stop, b.strand
+      self.id = b.gid
+  def add_trans(self, tr):
+    self.trans.append(tr)
+  def __repr__(self):
+    s = "gene_id " + self.id + ', ' + str(len(self.trans)) + " transcripts, " + Exon.__repr__(self)
+    for t in self.trans:
+      s += '\n\t' + t.__repr__()
+    return s
+  def check(self):
+    if len(self.trans) > 0 :
+      if self.chr == '' : self.chr = self.trans[0].chr
+      if self.trand == '.' : self.strand = self.trans[0].strand
+      if self.start is None : self.start, self.stop = self.trans[0].start, self.trans[0].stop
+    for t in self.trans:
+      #t.check()
+      if t.start < self.start: self.start = t.start
+      if t.stop > self.stop: self.stop = t.stop
+  def merge_trans(self):
+    '''generate a new transcript that merge all transcript exons in the gene
+    '''
+    es = []
+    merge = []
+    for t in self.trans:
+      es += t.exons
+    es.sort()
+    me = es[0]
+    for i in range(1, len(es)):
+      if me.stop >= es[i].start:
+        me = union(me, es[i])[0]
+      else: 
+        merge.append(me)
+        me = es[i]
+    merge.append(me)
+    #merge.check()
+    return exons2bed12(merge)
 def selectMaxCDS(trans): 
   '''select transcript with max CDS length
   '''
@@ -544,6 +594,22 @@ def selectMaxCDS(trans):
     if cdslen % 3 != 0 : continue
     if cdslen > maxlen : maxlen, mt = cdslen, t
   return mt
+
+def gpdGeneIter(file, **kwargs):
+  chr, gt = '', {}
+  for b in gpd_iter(file, **kwargs):
+    if b.chr != chr :
+      for gid in gt : 
+        yield gt[gid]
+        #t = selectMaxCDS(gt[gid])
+        #if t is not None : yield t
+      chr, gt = '', {}
+    if b.gid not in gt : gt[b.gid] = gpdGene(b = b)
+    else : gt[b.gid].add_trans(b)
+  for gid in gt : yield gt[gid]
+    #t = selectMaxCDS(gt[gid])
+    #if t is not None : yield t
+
 
 def gpdSelectIter(file, select = selectMaxCDS, **kwargs):
   chr, gt = '', {}

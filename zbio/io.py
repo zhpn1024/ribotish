@@ -44,6 +44,30 @@ def transIter(filePath, fileType = 'auto', gz = False, **kwargs):
     return bed.gpd_iter(infile, **kwargs)
   else : raise IOError('Unknown trans file type: {}'.format(fileType))
 
+def geneIter(filePath, fileType = 'auto', gz = False, **kwargs):
+  '''yield all transcript in gene annotation file
+  '''
+  if filePath.split('.')[-1].lower() == 'gz' : gz = True
+  if gz :
+    import gzip
+    infile = gzip.open(filePath, 'rb')
+  else : infile = open(filePath, 'r')
+  if fileType == 'auto' : fileType = suffixType(filePath, gz)
+  if fileType == 'bed' :
+    import bed
+    return bed.bed12_iter(infile, **kwargs)
+  elif fileType == 'gtf' :
+    import gtf
+    return gtf.gtfgene_iter(infile, **kwargs)
+  elif fileType == 'gff' :
+    import gtf
+    return gtf.gtfgene_iter(infile, gff = True, **kwargs)
+  elif fileType == 'gpd' :
+    import bed
+    return bed.gpdGeneIter(infile, **kwargs)
+  else : raise IOError('Unknown trans file type: {}'.format(fileType))
+
+
 def transFetch(filePath, tid, fileType = 'auto', gz = False, **kwargs):
   '''fetch given transcript in gene annotation file
   '''

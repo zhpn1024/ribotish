@@ -47,12 +47,17 @@ def rstest(x, y, delta = 1e-4, show = False):
 class Ribo: 
   '''riboseq profile for a transcript
   '''
-  def __init__(self, trans, ribobam = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1):
+  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1):
     self.length = trans.cdna_length()
-    self.cnts = [0] * self.length
     self.nhead, self.ntail = nhead, ntail
-    self.total = 0
     self.trans = trans
+    if bamload is not None : 
+      self.cnts = bamload.transCounts(trans)
+      self.total = sum(self.cnts)
+      return
+    else :
+      self.cnts = [0] * self.length
+      self.total = 0
     if ribobam is None : return
     if downsample < 1 : 
       import random
@@ -132,7 +137,7 @@ class Ribo:
     if old : return rstest_mw(inarr, outarr)
     elif glm : return stat.glmNBTest(inarr, outarr)
     return rstest(inarr, outarr, delta = delta, show = show)
-  def enrich_test_region(self, r1, r2, frame, glm = False): 
+  def enrich_test_region(self, r1, r2, frame, delta=1e-4, glm = False, show = False): 
     '''Enrich test between regions
     '''
     inarr, outarr = [], []
@@ -145,7 +150,10 @@ class Ribo:
     if len(inarr) <= 0 or len(outarr) <= 0 : return None
     if max(inarr) == 0 : return 1
     if glm : return stat.glmNBTest(inarr, outarr)
-    p = rstest(inarr, outarr)
+    p = rstest(inarr, outarr, delta = delta)
+    if show : 
+      print 'inarr', inarr
+      print 'outarr', outarr
     return p
   
   def multi_orf_test(self, orflist, glm = False): 
@@ -193,18 +201,24 @@ class Ribo:
     for i in range(1, codonSize):
       blankall = blankall.intersect(blank[i])
     blank.append(blankall)
+    show =False
+    if tid == 'ENST00000379198' : show = True
     for i, o in enumerate(orflist):
       #print self.trans.id, o, o.region, blank
-      eps[i], fps[i] = self.efpvalues(o, blank, glm = glm) #calculate enrichment and frame p-values
+      eps[i], fps[i] = self.efpvalues(o, blank, glm = glm, show = show) #calculate enrichment and frame p-values
     return eps, fps
     
-  def efpvalues(self, orf, blank, glm = False): # For multi_orf_test
+  def efpvalues(self, orf, blank, glm = False, show = False): # For multi_orf_test
     if orf.indr.rlen() < minRlen : r1 = orf.region
     else : r1 = orf.indr
     fp = self.frame_test_region(r1, orf.frame(), glm = glm)
     r2 = blank[codonSize]
     if r2.rlen() < minRlen or orf.indr.rlen() < minRlen : r2 = blank[orf.frame()]
-    ep = self.enrich_test_region(r1, r2, orf.frame(), glm = glm)
+    ep = self.enrich_test_region(r1, r2, orf.frame(), glm = glm, show = show)
+    if show : 
+      print r1, r2, fp, ep, orf.frame()
+      #print self.cnts[0:1000]
+      #print self.cnts[1000:2000]
     ''' More complicated tests
     if orf.prev is None : 
       r2 = blank[codonSize]
@@ -453,6 +467,30 @@ def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2):
   for i in range(len(bamfiles)) :
     mribo.merge(Ribo(trans, bamfiles[i], offdict = offdict[i], compatible = compatible, mis = mis))
   return mribo
+def multiRiboGene(gene, bampaths, offdict = None, compatible = True, mis = 2): 
+  '''Load multiple ribobam files to one object
+  '''
+  regions = interval.allTransRegions(gene.trans)
+  if offdict is None : offdict = [None] * len(bampaths)
+  mbl = bam.BamLoadChr(None, gene.chr, strand = gene.strand) # Empty object
+  for i in range(len(bampaths)) :
+    offunc = lambda r : r.genome_pos(offset(r, offdict[i]))
+    #def offunc(r):
+      #return offset(r, offdict[i])
+    mbl.merge(bam.BamLoadChr(bampaths[i], chr = gene.chr, region = regions[gene.chr], strand = gene.strand, posFunc = offunc, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary))
+  return mbl
+
+  if type(bampaths) == list : 
+    bamfiles = [bam.Bamfile(bp, "rb") for bp in bampaths]
+    if offdict is None : offdict = [None] * len(bampaths)
+  else : 
+    bamfiles = [bam.Bamfile(bampaths, "rb")]
+    offdict = [offdict]
+  mribo = Ribo(trans) # Empty object
+  for i in range(len(bamfiles)) :
+    mribo.merge(Ribo(trans, bamfiles[i], offdict = offdict[i], compatible = compatible, mis = mis))
+  return mribo
+
 def select(g): 
   '''select trans for TIS background estimation, replaced in gtf and bed
   '''

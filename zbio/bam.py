@@ -130,6 +130,7 @@ class Bam():#AlignedRead
     '''if bias is 1, the splice junction will be mapped to 5' end of downstream exon,
     if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
     '''
+    if p is None : return None
     m = self.cdna_length()
     if p < 0 or p > m: return None
     if p == 0 : return self.end5
@@ -430,6 +431,7 @@ class BamLoadChr:
       for r in bamfile.fetch_reads(chr, start, stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
         if r.strand not in self.data : continue
         p = posFunc(r)
+        #print p
         if start is not None and p < start : continue
         if stop is not None and p > stop : continue
         if p not in self.data[r.strand] : self.data[r.strand][p] = {}
