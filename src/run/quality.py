@@ -207,7 +207,8 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
   use, frame, txt = ribo.quality(y, threshold = args.th)
   ax0.text(3.1 ,0.9 ,txt, horizontalalignment= 'right',verticalalignment='top', color='k')
   formatax(ax0)
-  ax0.set_xticks(range(4))
+  #ax0.set_xticks(range(4))
+  ax0.set_xticks([])
   ax0.set_yticks(frange(stop=1.1, step=0.5))
   if start == 0 : 
     ax0.set_ylabel(str(l)+'nt',rotation=0,size='x-large')

@@ -36,6 +36,7 @@ def set_parser(parser):
   parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
   parser.add_argument("--framelocalbest", action="store_true", help="Only report local best frame test results")
   parser.add_argument("--framebest", action="store_true", help="Only report best frame test results")
+  parser.add_argument("--longest", action="store_true", help="Only report longest possible ORF results")
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
   parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
@@ -58,7 +59,7 @@ def run(args):
   # prepare
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
-  global tpth, fpth, minpth, framebest, framelocalbest#fspth
+  global tpth, fpth, minpth, framebest, framelocalbest, longest #fspth
   #global showtime
   #showtime = args.showtime
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
@@ -80,6 +81,7 @@ def run(args):
     alt = True
     orf.cstartlike = [c.upper() for c in args.altcodons]
   tpth, fpth, minpth, framebest, framelocalbest = args.tpth, args.fpth, args.minpth, args.framebest, args.framelocalbest # fspth
+  longest = args.longest
   tis2ribo = args.tis2ribo
   parts = [0.1 * (i+1) for i in range(args.nparts)]
   gfilter = None
@@ -258,11 +260,11 @@ def _pred_gene(ps): ### trans
         else : tp = None
         if enrichtest : rp = tribo.enrich_test(tis, stop)
         else : rp = tribo.frame_test(tis, stop)
-        if tp is not None and tp > tpth : continue 
-        if rp > fpth : continue # or fisher > fspth 
+        if tp is not None and tp >= tpth : continue 
+        if rp >= fpth : continue # or fisher > fspth 
         minp = rp
         if tp is not None and tp < minp : minp = tp
-        if minp > minpth : continue
+        if minp >= minpth : continue
         tistype = tisType(tis, stop, cds1, cds2)
         orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,stop)
         tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
@@ -281,6 +283,7 @@ def _pred_gene(ps): ### trans
         starts = o.starts
         if alt : starts += o.altstarts
         starts.sort()
+        if longest : starts = starts[0:1]
         ol = len(starts)
         tps = [None] * ol
         rps = [None] * ol
@@ -290,13 +293,14 @@ def _pred_gene(ps): ### trans
           else : rps[i] = tribo.frame_test(tis, o.stop)
         rst = pvalStatus(rps)
         for i, tis in enumerate(starts) : 
-          if tps[i] is not None and tps[i] > tpth : continue
-          if rps[i] > fpth : continue # or fishers[i] > fspth
+          if tps[i] is not None and tps[i] >= tpth : continue
+          if rps[i] >= fpth : continue # or fishers[i] > fspth
           minp = rps[i]
           if tps[i] is not None and tps[i] < minp : minp = tps[i]
-          if minp > minpth : continue
-          if framelocalbest and rst[i] == 'N' : continue
-          if framebest and rst[i][0] != 'T' : continue
+          if minp >= minpth : continue
+          if not longest :
+            if framelocalbest and rst[i] == 'N' : continue
+            if framebest and rst[i][0] != 'T' : continue
           tistype = tisType(tis, o.stop, cds1, cds2)
           orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
           tid = "%s\t%s\t%s\t%s\t%s:%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.strand, orfstr, tistype)
@@ -317,6 +321,7 @@ def pvalStatus(ps) :
   l = len(ps)
   st = ['N'] * l
   if l <= 0 : return st
+  if longest : return st
   cp = ps[:] + [1]
   m, c = 1, 1
   for i, p in enumerate(cp): 

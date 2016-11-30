@@ -290,11 +290,13 @@ class Bam():#AlignedRead
     '''
     if self.strand == '+' : 
       if self.get_tag('MD')[0] == '0' : return True # mismatch at 0
-      elif self.cigar[0][0] == 4 : return True
-      else : return False
-    elif self.get_tag('MD')[-1] == '0' : 
-      if not self.get_tag('MD')[-2].isdigit() : return True
-      elif self.cigar[-1][0] == 4 : return True
+      #elif self.cigar[0][0] == 4 : return True
+      #else : return False
+    else :
+      if self.get_tag('MD')[-1] == '0' : 
+        if not self.get_tag('MD')[-2].isdigit() : return True
+      #elif self.cigar[-1][0] == 4 : return True
+      #else : return False
     return False
 def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False): 
   '''compatible version of transReadsIter, slightly different
