@@ -21,7 +21,7 @@ def offset(read = 30, offdict = None):
   '''
   if offdict is None : return defOffset
   if type(read) == int : length = read # compatible with old versions!
-  else : length = read.cdna_length()
+  else : length = read.fragment_length()
   if 'm0' not in offdict or not read.is_m0() : od = offdict
   else : od = offdict['m0']
   if length in od : return od[length]
@@ -63,7 +63,7 @@ class Ribo:
       import random
       random.seed(seed)
     for r in bam.transReadsIter(ribobam, trans, compatible = compatible, mis = mis, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary) : #ribobam.fetch_reads(trans.chr, trans.start, trans.stop):
-      l = r.cdna_length()
+      l = r.fragment_length()
       off = offset(r, offdict)
       if off is None: continue
       i = trans.cdna_pos(r.genome_pos(off)) ## Default bias
@@ -864,7 +864,7 @@ def _lendis_gene(args):
   tr = 0 # Total reads
   for r in bam.compatible_bam_iter(bamfile, t, mis = 2, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
     if m0 : ism0 = r.is_m0()
-    l = r.cdna_length()
+    l = r.fragment_length()
     if l < lens[0] or l >= lens[1]: continue # not in given length range
     i = t.cdna_pos(r.genome_pos(0)) # 5' end 
     if i is None : continue
@@ -897,7 +897,7 @@ def _lendis_trans(args):
   tr = 0 # Total reads
   for r in bam.transReadsIter(bamfile, t, mis = 2, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
     if m0 : ism0 = r.is_m0()
-    l = r.cdna_length()
+    l = r.fragment_length()
     if l < lens[0] or l >= lens[1]: continue # not in given length range
     i = t.cdna_pos(r.genome_pos(0)) # 5' end 
     if i is None : continue
@@ -990,7 +990,7 @@ def lendisM0(gtfpath, bampath, lens = [26,35], dis = [-40,20], maxNH = maxNH, mi
     
     for r in bam.compatible_bam_iter(bamfile, t, mis = 2, maxNH = maxNH, minMapQ = minMapQ):
       if r.get_tag('MD')[0] != '0' : continue ## Only reads with mismatch at 1st nt
-      l = r.cdna_length()
+      l = r.fragment_length()
       if l not in tdis1: continue
       i = t.cdna_pos(r.genome_pos(0)) # 5' end 
       if i is None : continue

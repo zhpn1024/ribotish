@@ -1,9 +1,12 @@
 '''
 Bam file and reads processing
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
+To do :
+Paired reads
+r.get_blocks
 '''
 import pysam
-import bed
+from . import interval
 
 def changechr(chr):
   '''change between two chr versions
@@ -17,28 +20,51 @@ def changechr(chr):
 class Bamfile(pysam.Samfile):
   def __repr__(self):
     return 'pysam.Samfile '+self.filename
-  def fetch_reads(self, chr, start, stop, maxNH = None, minMapQ = None, secondary = False) : #, multiple_iterators=False):
+  def fetch_reads(self, chr, start, stop, maxNH = None, minMapQ = None, secondary = False, paired = True) : #, multiple_iterators=False):
     if chr not in self.references : 
       chr = changechr(chr)
       if chr not in self.references : 
         print("chr {} not found in Bamfile!".format(chr))
         raise StopIteration
     rds = self.fetch(reference=chr, start=start, end=stop) #, multiple_iterators=multiple_iterators)
+    r1, r2 = {}, {}
     for read in rds:
       try: 
         if maxNH is not None and read.get_tag('NH') > maxNH : continue
       except: pass
       if not secondary and read.is_secondary : continue
       if minMapQ is not None and read.mapping_quality < minMapQ : continue
-      r = Bam(read, self)
-      yield r
+      if paired and read.is_paired :
+        id = read.query_name
+        if id[-2:] in ('\1', '\2', '#1', '#2') : id = id[:-2] ##
+        if read.is_read1 : 
+          if id in r2 : 
+            yield Bam(read, self, read2 = r2[id])
+            del r2[id]
+          else : r1[id] = read
+        elif read.is_read2 : 
+          if id in r1 : 
+            yield Bam(r1[id], self, read2 = read)
+            del r1[id]
+          else : r2[id] = read
+      else : yield Bam(read, self)
+      #yield r
+    if paired :
+      for id in r1 : 
+        read = self.mate(r1[id])
+        yield Bam(r1[id], self, read2 = read)
+    #if len(r2) > 0 :
+      for id in r2 : 
+        read = self.mate(r2[id])
+        yield Bam(read, self, read2 = r2[id])
 
 class Bam():#AlignedRead
   
-  def __init__(self, read, bamfile):
+  def __init__(self, read, bamfile, read2 = None):
     self.read = read
     self.ref = bamfile.references
     self.lens = bamfile.lengths
+    self.read2 = read2
   #def __getattr__(self,attr):
     #a=getattr(self,attr)
     #return a
@@ -49,13 +75,27 @@ class Bam():#AlignedRead
     return self.ref[self.read.tid]
   @property
   def start(self):
-    return self.read.pos
+    return self.read.reference_start
+  @property
+  def fragment_start(self):
+    if self.read2 is None : return self.read.reference_start
+    else :
+      if self.is_reverse() : return self.read2.reference_start
+      else : return self.read.reference_start
+    #except : return self.read.pos
   @property
   def stop(self):
-    return int(self.read.aend)
+    return self.read.reference_end
+    #return int(self.read.reference_end)
+  @property
+  def fragment_stop(self):
+    if self.read2 is None : return self.read.reference_end
+    else :
+      if self.is_reverse() : return self.read.reference_end
+      else : return self.read2.reference_end
   @property
   def id(self): 
-    return self.read.qname
+    return self.read.query_name
   @property
   def score(self): 
     try:
@@ -68,41 +108,78 @@ class Bam():#AlignedRead
     else: return '+'
   @property
   def cigar(self): 
-    return self.read.cigar
+    try : return self.read.cigartuples
+    except : return self.read.cigar
   @property
   def weight(self): 
     return 1
-  def __len__(self): #All bed
-    return self.read.alen
+  def __len__(self): 
+    return self.read.reference_length
   @property
   def length(self):
     return len(self)
-  
+  def fragment_length(self): 
+    if self.read2 is None : return self.read.reference_length
+    else : return abs(self.read.template_length)
   def __repr__(self):
-    return "Bam AlignedSegment " + self.id
+    if self.read2 is None : return "Bam AlignedSegment {} {}".format(self.id, str(self))
+    else : return "Bam paired AlignedSegment {} {}".format(self.id, str(self))
   def __str__(self):
-    return "%s:%d-%d:%s" % (self.chr, self.start, self.stop, self.strand)
+    return "%s:%d-%d:%s" % (self.chr, self.fragment_start, self.fragment_stop, self.strand)
   
   def cdna_length(self): 
-    return self.read.qlen
-    #for ctype, l in self.cigar:
-      #if ctype == 4 : s -= l
-    #return s
-  
+    return self.read.query_alignment_length
+    #else : return self.fragment_length()
+
+  def fragment_length(self):
+    if self.read2 is None : return self.cdna_length()
+    r1 = interval.Interval(itvs = self.read.get_blocks())
+    r2 = interval.Interval(itvs = self.read2.get_blocks())
+    ri = r2.intersect(r1)
+    ril = ri.rlen()
+    if ril > 0 : 
+      if not self.is_reverse() :
+        r1s = r1.intersect(interval.Interval(r1.start, ri.stop))
+        r2s = r2.intersect(interval.Interval(ri.stop, r2.stop))
+      else : 
+        r1s = r1.intersect(interval.Interval(ri.start, r1.stop))
+        r2s = r2.intersect(interval.Interval(r2.start, ri.start))
+      return r1s.rlen() + r2s.rlen()
+    else : # there may be problems here
+      l = max(r1.start, r2.start) - min(r1.stop, r2.stop) # uncovered length, may be not accurate
+      if l < 0 : l = 0 ###
+      l += self.read.query_alignment_length + self.read2.query_alignment_length 
+      
+      return l
   def center(self): #Middle point, NEED REVISE!!
     return (self.start+self.stop)/2.0
   
   def is_reverse(self): 
     return self.read.is_reverse
-  
+  def is_paired(self):
+    return self.read2 is not None
+  def is_pair_gapped(self):
+    if self.read2 is None : return False
+    if not self.is_reverse : return self.read.reference_end < self.read2.reference_start
+    else : return self.read2.reference_end < self.read.reference_start
   @property
-  def end5(self): #5' end, all bed
+  def end5(self): #5' end
     if self.read.is_reverse: return self.stop
     else : return self.start
   @property
-  def end3(self): #3' end, all bed
+  def end3(self): #3' end
     if self.read.is_reverse: return self.start
     else : return self.stop
+  @property
+  def fragment_end5(self): 
+    if self.read2 is None : return self.end5
+    if self.is_reverse: return self.fragment_stop
+    else : return self.fragment_start
+  @property
+  def fragment_end3(self): 
+    if self.read2 is None : return self.end3
+    if self.is_reverse: return self.fragment_start
+    else : return self.fragment_stop
   def __getattr__(self, name):
     if name == '__class__': return str
     else: return self.read.__getattribute__(name)
@@ -129,6 +206,7 @@ class Bam():#AlignedRead
   def genome_pos(self, p, bias = 1):
     '''if bias is 1, the splice junction will be mapped to 5' end of downstream exon,
     if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
+    Do not support paired end read2
     '''
     if p is None : return None
     m = self.cdna_length()
@@ -157,6 +235,7 @@ class Bam():#AlignedRead
     return None
   @property
   def introns(self):
+    from . import bed
     s = []
     p = 0
     pos = self.start
@@ -179,6 +258,7 @@ class Bam():#AlignedRead
     return s
   @property
   def exons(self): # NOT TESTED!! Insertions and deletions are skipped
+    from . import bed
     s = []
     p = 0
     pos, d = self.start, 0
@@ -204,7 +284,21 @@ class Bam():#AlignedRead
   def isCompatible(self, transitv, mis = 0):
     '''if compatible with given transcript, allow some (mis) incompatible bases
     '''
-    from . import interval
+    if transitv.__class__.__name__ != 'Interval' : 
+      transitv = interval.trans2interval(transitv)
+    if self.read2 is None : return self.readCompatible(transitv, mis = mis)
+    else : return self.readCompatible(transitv, mis = mis) and self.readCompatible(transitv, read = self.read2, mis = mis)
+  def readCompatible(self, transitv, read = None, mis = 0):
+    if read is None : read = self.read
+    ri = interval.Interval(itvs = read.get_blocks())
+    return ri.is_compatible(transitv, mis = mis)
+    #ti = ri.intersect(transitv)
+    #if ri.rlen() - ti.rlen() <= mis : return True
+    #return False
+    
+  def isCompatible0(self, transitv, mis = 0):
+    
+    #from . import interval
     if transitv.__class__.__name__ != 'Interval' : 
       transitv = interval.trans2interval(transitv)
     r1 = self.start
@@ -241,12 +335,13 @@ class Bam():#AlignedRead
       pos = self.genome_pos(i, bias = 1)
       if pos < trans.start or pos > trans.stop : continue
       i2 = trans.cdna_pos(pos, strict = True)
-      if i2 is None : m += 1
-      else :
+      #if i2 is None : m += 1
+      #else :
+      if i2 is not None :
         if last >= 0 :
           if i2 != last + 1 :
             m += min(i, self.cdna_length() - i, abs(i2 - last - 1))
-        else : pass # m += min(i, i2)
+        else : m += min(i, i2)
         last = i2
       #print(i, i2, last, m)
       if m > mis : return False
@@ -289,14 +384,17 @@ class Bam():#AlignedRead
     '''if mismatch at 5' end
     '''
     if self.strand == '+' : 
-      if self.get_tag('MD')[0] == '0' : return True # mismatch at 0
+      if self.read.get_tag('MD')[0] == '0' : return True # mismatch at 0
       #elif self.cigar[0][0] == 4 : return True
       #else : return False
-    else :
-      if self.get_tag('MD')[-1] == '0' : 
+    elif self.read2 is None :
+      if self.read.get_tag('MD')[-1] == '0' : 
         if not self.get_tag('MD')[-2].isdigit() : return True
       #elif self.cigar[-1][0] == 4 : return True
       #else : return False
+    else :
+      if self.read2.get_tag('MD')[-1] == '0' : 
+        if not self.read2.get_tag('MD')[-2].isdigit() : return True
     return False
 def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False): 
   '''compatible version of transReadsIter, slightly different
@@ -340,7 +438,7 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
     rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary)#, multiple_iterators=False)
     for read in rds: #yield read
       #read = Bam(r, bamfile)
-      if (read.id, read.start) in used : continue
+      if (read.id, read.fragment_start) in used : continue
       if sense and read.strand != trans.strand : continue
       #try: 
         #if maxNH is not None and read.read.get_tag('NH') > maxNH : continue
@@ -349,7 +447,8 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
       #if minMapQ is not None and read.read.mapping_quality < minMapQ : continue
       #o = read.read.get_overlap(trans.start, trans.stop)
       #if o < read.cdna_length() - mis: continue
-      if read.start <= e.start or read.stop >= e.stop : used[(read.id, read.start)] = 1 # for reads across exons
+      if read.fragment_start <= e.start or read.fragment_stop >= e.stop : 
+        used[(read.id, read.fragment_start)] = 1 # for reads across exons
       if compatible and not read.isCompatible(transitv = transitv, mis = mis) : continue
       yield read
 
@@ -437,7 +536,8 @@ class BamLoadChr:
         if start is not None and p < start : continue
         if stop is not None and p > stop : continue
         if p not in self.data[r.strand] : self.data[r.strand][p] = {}
-        key = r.start, tuple(r.cigar)
+        if r.read2 is None : key =tuple(r.read.get_blocks()), #r.start, tuple(r.cigar)
+        else : key = tuple(r.read.get_blocks()), tuple(r.read2.get_blocks())
         #print key
         if key not in self.data[r.strand][p] : self.data[r.strand][p][key] = 0
         self.data[r.strand][p][key] += 1
@@ -469,6 +569,12 @@ class BamLoadChr:
   def _compatible(self, key, transitv, mis = 2):
     '''if compatible with given transcript, allow some (mis) incompatible bases
     '''
+    for blocks in key : 
+      ri = interval.Interval(itvs = blocks)
+      if not ri.is_compatible(transitv, mis = mis) : return False
+    return True
+  def _compatible0(self, key, transitv, mis = 2): # key structure changed
+    
     from . import interval
     r1 = key[0]
     r2 = r1 + sum([l for ctype, l in key[1]])

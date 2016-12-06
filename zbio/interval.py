@@ -193,7 +193,26 @@ class Interval:
     else : return self.start
   def is_empty(self):
     return len(self.lst) == 0
-
+  def is_compatible(self, other, mis = 0) :
+    p1 = max(self.start, other.start)
+    p2 = min(self.stop, other.stop)
+    if p2 - p1 <= mis : return True # not overlap
+    si = self.intersect([(p1, p2)])
+    oi = other.intersect([(p1, p2)])
+    
+    m = si.sub(oi).rlen()
+    if m > mis : return False
+    m += oi.sub(si).rlen()
+    if m > mis : return False
+    return True
+  def contradict(self, other) :
+    p1 = max(self.start, other.start)
+    p2 = min(self.stop, other.stop)
+    if p2 <= p1 : return None # not overlap, empty
+    si = self.intersect([(p1, p2)])
+    oi = other.intersect([(p1, p2)])
+    return si.sub(oi), oi.sub(si)
+    
 def trans2interval(t, start = 0, stop = None):
   '''generate intervals for a transcript
   start, stop are cDNA positions
