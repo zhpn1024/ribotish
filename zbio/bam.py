@@ -1,9 +1,6 @@
 '''
 Bam file and reads processing
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
-To do :
-Paired reads
-r.get_blocks
 '''
 import pysam
 from . import interval

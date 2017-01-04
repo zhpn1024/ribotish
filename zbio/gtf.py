@@ -379,14 +379,18 @@ class gtfTrans(Exon):
     except: return 0
   @property
   def introns(self):
+    if hasattr(self, '_introns') : return self._introns
     introns = []
     last = -1
-    for e in self.exons:
+    for i, e in enumerate(self.exons):
       if last >= 0 : 
         lst = [last, e.end5]
         lst.sort()
-        introns.append(Exon([self.chr,'','intron',lst[0]+1,lst[1],'',self.strand,'',self.attrstr], gff=self.gff))
+        it = Exon([self.chr,'','intron',lst[0]+1,lst[1],'',self.strand,'',self.attrstr], gff=self.gff)
+        it.id += '_intron{}'.format(i)
+        introns.append(it)
       last = e.end3
+    self._introns = introns
     return introns
   def cdna_pos(self, p, strict = False):
     '''if strict is True, the 3' end of exon will be considered as not in the transcript,

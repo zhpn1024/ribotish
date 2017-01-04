@@ -105,14 +105,20 @@ class Interval:
   def intersect(self, other): # optimized
     '''intersect intervals, self and other should both be sorted
     '''
+    if len(other) == 0 or len(self) == 0 : return Interval()
+    os = other[0][0]
+    osi, c = self.nearest(os)
     lst = []
     j = 0
-    for itv in self.lst:
+    #for itv in self.lst:
+    for i in range(osi, len(self.lst)) :
+      itv = self.lst[i]
       while j < len(other) and other[j][1] <= itv[0] : j += 1
       j1 = j
       while j1 < len(other) and other[j1][0] < itv[1] :
         lst.append((max(itv[0], other[j1][0]), min(itv[1], other[j1][1])))
         j1 += 1
+      if j >= len(other) : break
     new = Interval(itvs = lst)
     return new
     #return (self + other) - (self - other) - (other - self) # hehe
@@ -120,6 +126,7 @@ class Interval:
     ''' nearest interval index in self.lst, return index, cmp(p, lst[index])
     '''
     l = len(self.lst)
+    if l == 0 : return -1, 1
     lasti = i = l // 2
     i0, i1 = 0, l
     while i0 < i1 : 
@@ -129,9 +136,9 @@ class Interval:
       lasti = i
       i = (i0 + i1) // 2
       if i == lasti : break
-    if self.lst[i][0] <= p <= self.lst[i][1] : return i, 0
-    if self.lst[i][0] > p : return i, -1
-    if self.lst[i][1] < p : return i, 1
+    if self.lst[i][0] <= p <= self.lst[i][1] : return i, 0 # inside
+    if self.lst[i][0] > p : return i, -1 # p is smaller than ith interval, only when p < self.start
+    if self.lst[i][1] < p : return i, 1 # p is greater than ith interval
     
   def is_inside(self, p, left = True, right = False, strand = '+') : # is p inside interval
     if len(self.lst) == 0 : return False
@@ -244,6 +251,7 @@ def cds_region_trans(t, cds1 = None, cds2 = None):
   if cds2 is None : 
     tl = t.cdna_length()
     cds2 = cds1 + (tl - cds1) // 3 * 3
+  #print cds1, cds2
   if cds2 - cds1 == 0 : return cr
   wrong = False
   if (cds2 - cds1) % 3 > 0 : 

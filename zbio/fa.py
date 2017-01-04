@@ -68,11 +68,13 @@ class Faidx:
 class Fa:
   '''indexed genome fasta file
   '''
-  def __init__(self, fapath):
+  def __init__(self, fapath, verbose = False):
     self.file = open(fapath, 'r')
     idxpath = fapath + '.fai'
     if isfile(idxpath) : self.load_idx(idxpath)
-    else : self.make_idx(idxpath)
+    else : 
+      if verbose : print('Making fasta index for {}...'.format(fapath))
+      self.make_idx(idxpath)
   def make_idx(self, idxpath):
     self.file.seek(0)
     self.idxarr = []

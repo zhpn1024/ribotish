@@ -53,6 +53,7 @@ class Orf:
     return len(self) // codonSize - 1
   #@property
   def start(self, alt = True):
+    if not self.has_start() : return None
     if alt : return min(self.starts + self.altstarts)
     else :
       if len(self.starts) > 0 : return min(self.starts)
@@ -82,7 +83,11 @@ class Orf:
     return None
   def filtByLen(self, minaalen, tail = -1):
     stop = self.stop - 3
-    if stop < 0 : stop = tail
+    if stop < 0 : 
+      self.stop = stop = tail
+      start = self.start()
+      if start is None : return
+      self.stop -= (stop - start) % 3 # keep in frame
     #if stop < 0 : return
     th = minaalen * 3
     rm = False

@@ -47,10 +47,11 @@ def rstest(x, y, delta = 1e-4, show = False):
 class Ribo: 
   '''riboseq profile for a transcript
   '''
-  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1):
+  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1, saverid = False):
     self.length = trans.cdna_length()
     self.nhead, self.ntail = nhead, ntail
     self.trans = trans
+    self.rids = {}
     if bamload is not None : 
       self.cnts = bamload.transCounts(trans)
       self.total = sum(self.cnts)
@@ -70,6 +71,7 @@ class Ribo:
       if i is None or i >= len(self.cnts) : continue
       if downsample < 1 and random.random() >= downsample : continue ## downsample
       self.cnts[i] += 1
+      if saverid : self.rids[r.id] = i
     self.total = sum(self.cnts)
   def cnts_enum(self, start = nhead, stop = None):
     if stop is None : stop = self.length - self.ntail
@@ -319,13 +321,20 @@ class Ribo:
       if p - i >= 0 and self.cnts[p] < self.cnts[p - i]: return False
     return True
   def cnts_dict(self):
-    '''only non-sero sites, not used
+    '''only non-sero sites
     '''
     cd = {}
     for i in range(nhead, len(self.cnts) - ntail):
       if self.cnts[i] > 0 : cd[i] = self.cnts[i] 
     return cd
-
+  def cnts_dict_str(self):
+    '''string for cnts_dict
+    '''
+    cdstr = '{'
+    for i in range(nhead, len(self.cnts) - ntail):
+      if self.cnts[i] > 0 : cdstr += '{}:{}, '.format(i, self.cnts[i]) #cd[i] = self.cnts[i] 
+    cdstr = cdstr.rstrip(', ') + '}'
+    return cdstr
   def top_summits_iter(self, start = None, stop = None, minratio = 0, flank = 3, is_zt = False, pth = 0.05, harr = False): 
     '''generate all possible sites, do not specify total number or test with r, p, not used in final version
     '''
@@ -578,7 +587,7 @@ def estimate_tis_bg_inframe(genepath, bampaths, genomefapath, parts = [0.25, 0.5
       data[ip].record(c)
       
   if verbose : print ('Estimate NB parameters...')
-  if numProc <= 1 : paras = list(map(_est_nb_lower, data))
+  if numProc <= 1 : paras = list(map(_est_nb, data))
   else : 
     paras = list(pool.map(_est_nb, data)) #[(da, maxqt) for da in data])
     pool.close()
@@ -617,7 +626,8 @@ def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], o
   if parts[-1] < 1 : parts.append(1)
   genome = fa.Fa(genomefapath)
   fulldata, genes, sl = {}, [], []
-  data = [exp.ReadDict() for i in range(len(parts))]
+  l = len(parts)
+  data = [exp.ReadDict() for i in range(l)]
   
   trans_iter = io.transSelectIter(genepath, fileType = geneformat, chrs = genome.idx, verbose = verbose)
   args2 = bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis
@@ -636,21 +646,27 @@ def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], o
     genes.append(t)
   sl.sort()
   if verbose : print ('Group data...')
-  slp = [None] * len(parts)
+  slp = [None] * l
   s, ip = 0, 0
   for score, t in sl:
     s += t
     if s >= ctotal * parts[ip] : 
       slp[ip] = score
       ip += 1
-  if ip < len(parts) : slp[ip] = score
+  if ip < l : slp[ip] = score
   if verbose : print (slp)
   for t in genes:
     tdata, score = fulldata[t.id]
     ip = pidx(score, slp) #ip = sl_idx(score, sl, parts)
     data[ip].merge(tdata)
   if verbose : print ('Estimate NB parameters...')
-  if numProc <= 1 : paras = list(map(_est_nb_lower, data))
+  for i, d in enumerate(data): # in case of empty parts...
+    j = 1
+    while d.size() == 0 : # len(d) == 0 :
+      if i+j < l : d.merge(data[i+j])
+      if i-j >= 0 : d.merge(data[i-j])
+      j += 1
+  if numProc <= 1 : paras = list(map(_est_nb, data))
   else : 
     paras = list(pool.map(_est_nb, data)) #[(da, maxqt) for da in data])
     pool.close()
@@ -895,7 +911,7 @@ def _lendis_trans(args):
   td = lenDis(lens, dis, tl, cds1, cds2)
   if m0: tdm = lenDis(lens, dis, tl, cds1, cds2)
   tr = 0 # Total reads
-  for r in bam.transReadsIter(bamfile, t, mis = 2, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
+  for r in bam.transReadsIter(bamfile, t, compatible = False, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
     if m0 : ism0 = r.is_m0()
     l = r.fragment_length()
     if l < lens[0] or l >= lens[1]: continue # not in given length range
@@ -1015,7 +1031,7 @@ def lendisM0(gtfpath, bampath, lens = [26,35], dis = [-40,20], maxNH = maxNH, mi
         if s != '' : fbias[l][s] += 1
   return lendis, dis1, dis2, disf, fbias
 
-def quality(arr, threshold = 0.6, comment = False): 
+def quality(arr, threshold = 0.5, comment = False): 
   '''Quality estimation by RPF frame distribution
   '''
   good = 0.7

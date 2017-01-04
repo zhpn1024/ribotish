@@ -17,7 +17,11 @@ def set_parser(parser):
   parser.add_argument("--tis1para", type=strlist, help="Input offset parameter files for group 1 bam files")
   parser.add_argument("--tis2para", type=strlist, help="Input offset parameter files for group 2 bam files")
   parser.add_argument("--geneformat", type=str, default='auto', help="Gene annotation file format (gtf, bed, gpd, gff, default: auto)")
+  parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
+  parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
+  parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
   parser.add_argument("--nocompatible", action="store_true", help="Do not require reads compatible with transcript splice junctions")
+  parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check")
 
   # scatter plot result output
   parser.add_argument("--plotout", type=str, help="Scatter plot output pdf file")
@@ -66,10 +70,14 @@ def sig(data):
 def run(args):
   '''Main function for differential TIS
   '''
-  global pth, qth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible
+  global pth, qth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible, compatiblemis
   pth, qth = args.pth, args.qth
   tis1bampaths = args.tis1bampaths
   tis2bampaths = args.tis2bampaths
+  ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
+  compatible = not args.nocompatible
+  compatiblemis = args.compatiblemis
+
   if len(tis1bampaths) == 0 or len(tis2bampaths) == 0 :
     print('Missing bam file input!')
     exit(1)
@@ -201,9 +209,9 @@ def run(args):
     pd2 = [math.log(e.data[2]+1,2) for e in exps if e.data[6] < args.oqth and e.data[6] < args.opth and e.data[4] is not None and max(e.data[4], 1/e.data[4]) <= args.foldchange]
     nd1 = [math.log(e.data[0]+1,2) for e in exps if e.data[6] >= args.oqth or e.data[6] >= args.opth]
     nd2 = [math.log(e.data[2]+1,2) for e in exps if e.data[6] >= args.oqth or e.data[6] >= args.opth]
-    plot.scatter(qd1, qd2, alpha=0.2, edgecolors='none', color='r', label='q < {}'.format(args.oqth))
-    plot.scatter(pd1, pd2, alpha=0.2, edgecolors='none', color='y', label='q < {} & FC < {}'.format(args.oqth, args.foldchange))
-    plot.scatter(nd1, nd2, alpha=0.2, edgecolors='none', color='g', label='q > {}'.format(args.oqth))
+    plot.scatter(qd1, qd2, alpha=0.2, edgecolors='none', color='r', label='q < {} & FC > {}'.format(args.oqth, args.foldchange))
+    plot.scatter(pd1, pd2, alpha=0.2, edgecolors='none', color='y', label='q < {} & FC <= {}'.format(args.oqth, args.foldchange))
+    plot.scatter(nd1, nd2, alpha=0.2, edgecolors='none', color='g', label='q >= {}'.format(args.oqth))
     plot.legend(loc='upper left', frameon=False)
     d = - f / 2
     m1 = max(qd1+pd1+nd1)
@@ -245,11 +253,11 @@ def _get_tis(ps) :
   t, g1t, g2t = ps
   r1, r2 = [], []
   if g1t is not None :
-    t1tis = ribo.multiRibo(t, tis1bampaths, offdict = tis1offdict, compatible = compatible)
+    t1tis = ribo.multiRibo(t, tis1bampaths, offdict = tis1offdict, compatible = compatible, mis = compatiblemis)
     #ttis = ribo.Ribo(merge, tisbam1file, offdict = tis1offdict, compatible = False)
     for i in g1t : r1.append((i, t1tis.cnts[i]))
   if g2t is not None :
-    t2tis = ribo.multiRibo(t, tis2bampaths, offdict = tis2offdict, compatible = compatible)
+    t2tis = ribo.multiRibo(t, tis2bampaths, offdict = tis2offdict, compatible = compatible, mis = compatiblemis)
     for i in g2t : r2.append((i, t2tis.cnts[i]))
   return t.id, r1, r2
 

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#Last-modified: 4 Nov 2016 04:03:55 PM
+#Last-modified: 4 Jan 2017
 
 #         Module/Scripts Description
 # 
@@ -10,7 +10,7 @@
 # the distribution).
 # 
 # @status:  experimental
-# @version: 0.1.2
+# @version: 0.1.3
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 

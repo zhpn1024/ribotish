@@ -22,6 +22,11 @@ def set_parser(parser):
   parser.add_argument("--bins", type=int, default=20, help="Bins for cds profile (default: 20)")
   parser.add_argument("--nom0", action="store_true", help="Do not consider reads with mismatch at position 0 as a new group")
   parser.add_argument("--th", type=float, default=0.5, help="Threshold for quality (default: 0.5)")
+  # Reads filters
+  parser.add_argument("--maxNH", type=int, default=1, help="Max NH value allowed for bam alignments (default: 1)")
+  parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
+  parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
+  
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes (default: 1)")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
 
@@ -38,6 +43,7 @@ def run(args):
   global m0
   m0 = True
   if args.nom0 : m0 = False
+  ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   if args.input is None :
     minR = 1
     if args.genepath is None : 
@@ -219,13 +225,15 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
     use, tisframe, tistxt, mp = ribo.TISquality(dis1[l], dis = args.dis, threshold = args.th)
     if tisframe != frame : use = False
     #print use, frame, tistxt
+  txt = ''
+  if i == 0 : txt = "offset:"
   if use : 
     offset, th = ribo.get_offset(dis1[l], dis = args.dis, frame = frame, tis = args.tis)
     if offset is not None :
-      txt = "offset=%d" % (offset)
+      txt += str(offset)
       offdict[l] = offset
-    else : txt = ''
-  else : txt = "remove"
+    #else : txt = ''
+  else : txt += "NA"
   tcol = 'k'
   if use : tcol = fbcols[frame]
   ax1 = plot.subplot(gs[i, start+1:start+3])

@@ -200,6 +200,7 @@ class NegBinom:
   rMax = 1e8
   rMin = 1e-8
   Delta = 1e-8
+  p_record = {}
   def __init__(self, r = 1.0, p = 0.5):
     self.p = p
     self.r = r
@@ -216,11 +217,19 @@ class NegBinom:
     return nbinom.pmf(k, self.r, self.p)
   def cdf(self, k = 0):
     return nbinom.cdf(k, self.r, self.p)
-  def pvalue(self, k = 0):
+  def pvalue(self, k = 0, record = True):
+    if record : 
+      key = (self.p, self.q)
+      if key not in self.p_record : self.p_record[key] = {}
+      elif k in self.p_record[key] : return self.p_record[key][k]
     p = 1 - nbinom.cdf(k-1, self.r, self.p)
-    if p > self.Delta : return p
+    if p > self.Delta : 
+      if record : self.p_record[key][k] = p
+      return p
     p = nbinom.pmf(k, self.r, self.p)
-    if p == 0 : return p
+    if p == 0 : 
+      if record : self.p_record[key][k] = p
+      return p
     ka = k + 1
     pa = nbinom.pmf(ka, self.r, self.p)
     p += pa
@@ -230,6 +239,7 @@ class NegBinom:
       pa = nbinom.pmf(ka, self.r, self.p)
       p += pa
     #p += pa
+    if record : self.p_record[key][k] = p
     return p
       
   def estimate(self, data): #data dict value:counts

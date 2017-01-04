@@ -5,6 +5,9 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 
 import matplotlib
 matplotlib.use('pdf')
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['svg.fonttype'] = 'none'
 from matplotlib.pylab import *
 
 def plotTrans(t, ypos = 0, intv = None, r = [0.1, 0.3], color = 'blue',rid = -0.5):
@@ -36,7 +39,7 @@ def plotTrans(t, ypos = 0, intv = None, r = [0.1, 0.3], color = 'blue',rid = -0.
   text((t.start+t.stop)//2, ypos+rid, t.id)
 
 def save(filename):
-  savefig(filename)
+  savefig(filename, transparent=True)
 
 def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = -1, scale = 1, col = ['r','g','b'], title = '', showlegend = False, showframe = True, bottom = 0.8, height = 0.1):
   '''plot riboseq profile
