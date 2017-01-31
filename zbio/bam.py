@@ -17,7 +17,7 @@ def changechr(chr):
 class Bamfile(pysam.Samfile):
   def __repr__(self):
     return 'pysam.Samfile '+self.filename
-  def fetch_reads(self, chr, start, stop, maxNH = None, minMapQ = None, secondary = False, paired = True) : #, multiple_iterators=False):
+  def fetch_reads(self, chr, start, stop, maxNH = None, minMapQ = None, secondary = False, paired = False) : #, multiple_iterators=False):
     if chr not in self.references : 
       chr = changechr(chr)
       if chr not in self.references : 
@@ -48,10 +48,20 @@ class Bamfile(pysam.Samfile):
       #yield r
     if paired :
       for id in r1 : 
+        if r1[id].mate_is_unmapped : continue
+        if r1[id].next_reference_id != r1[id].reference_id : continue
+        if r1[id].is_reverse != (not r1[id].mate_is_reverse) : continue
+        if abs(r1[id].next_reference_start - r1[id].reference_start) > 1e6 : continue
+        #print(id, 'r1')
         read = self.mate(r1[id])
         yield Bam(r1[id], self, read2 = read)
     #if len(r2) > 0 :
       for id in r2 : 
+        if r2[id].mate_is_unmapped : continue
+        if r2[id].next_reference_id != r2[id].reference_id : continue
+        if r2[id].is_reverse != (not r2[id].mate_is_reverse) : continue
+        if abs(r2[id].next_reference_start - r2[id].reference_start) > 1e6 : continue
+        #print(id, 'r2')
         read = self.mate(r2[id])
         yield Bam(read, self, read2 = r2[id])
 
@@ -419,7 +429,7 @@ def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, min
       yield read
     #else:
       #print read.id, b, read.cdna_length()
-def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False):
+def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False, paired = False):
   '''fetch reads from transcript exons
   '''
   chr = trans.chr
@@ -432,7 +442,7 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
   used = {}
   #trans.exons = trans.exons ##
   for e in trans.exons : 
-    rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary)#, multiple_iterators=False)
+    rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired)#, multiple_iterators=False)
     for read in rds: #yield read
       #read = Bam(r, bamfile)
       if (read.id, read.fragment_start) in used : continue

@@ -1,4 +1,4 @@
-__all__ = ["quality","predict","tisdiff"]#,"transplot"]
+__all__ = ["quality","predict","tisdiff"] #,"transplot"]
 
 from . import quality, predict, tisdiff #, transplot
 '''

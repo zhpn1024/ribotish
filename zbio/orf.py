@@ -33,6 +33,8 @@ class Orf:
       self.starts = []
       self.altstarts = []
       self.stop = stop
+      self.has_stop_codon = True # For Non-stop end
+      #self.end = self.stop - 3 
   def __str__(self):
     return "%d\t%s\t%s\t%d" % (self.frame, ','.join(map(str, self.starts)), ','.join(map(str, self.altstarts)), self.stop)
   def __repr__(self):
@@ -43,14 +45,18 @@ class Orf:
     return self.stop >= 0
   def __len__(self):
     if not self.is_complete() : return 0
-    return self.stop - self.start()
+    if self.stop > 0 : return self.stop - self.start()
+    #elif self.end > 0 : return self.end - self.start()
+    else : return 0
   def __cmp__(self, other):
     return cmp(len(self), len(other)) or cmp(self.start(),other.start)
   def length(self):
     return len(self)
   def aa_len(self):
-    if len(self) == 0 : return 0
-    return len(self) // codonSize - 1
+    l = len(self)
+    if l == 0 : return 0
+    if self.has_stop_codon : l -= 3
+    return l // codonSize
   #@property
   def start(self, alt = True):
     if not self.has_start() : return None
@@ -82,23 +88,25 @@ class Orf:
     if sm > 0 : return (s, self.stop)
     return None
   def filtByLen(self, minaalen, tail = -1):
-    stop = self.stop - 3
-    if stop < 0 : 
-      self.stop = stop = tail
+    end = self.stop - 3
+    if self.stop < 0 : 
+      end = tail
       start = self.start()
       if start is None : return
-      self.stop -= (stop - start) % 3 # keep in frame
+      end -= (end - start) % 3 # keep in frame
+      self.stop = end
+      self.has_stop_codon = False
     #if stop < 0 : return
     th = minaalen * 3
     rm = False
     for i, s in enumerate(self.starts):
-      if stop - s < th : 
+      if self.stop - s < th : 
         rm = True
         break
     if rm : self.starts[i:] = []
     rm = False
     for i, s in enumerate(self.altstarts):
-      if stop - s < th : 
+      if self.stop - s < th : 
         rm = True
         break
     if rm : self.altstarts[i:] = []
@@ -128,6 +136,7 @@ def allorf(seq, strand = '+', minaalen = 0, tail = -1) :
       if codon in cstart: o.starts.append(i)
       elif codon in cstartlike: o.altstarts.append(i)
       elif codon in cstop:
+        #o.end = i
         o.stop = i + codonSize
         o.filtByLen(minaalen = minaalen, tail = tail)
         if o.has_start():
@@ -145,11 +154,14 @@ def orflist(seq, strand = '+', sort = True, minaalen = 0, tail = -1):
 class FixedOrf():
   '''only one start and one stop
   '''
-  def __init__(self, start, stop):
+  def __init__(self, start, stop = -1, has_stop_codon = True):
     self.start = start
     self.stop = stop
+    self.has_stop_codon = has_stop_codon
   def __len__(self):
-    return self.stop - self.start
+    if self.stop > 0 : return self.stop - self.start
+    #elif self.end > 0 : return self.end - self.start
+    else : return 0
   def length(self):
     return len(self)
   def __repr__(self):
@@ -163,12 +175,12 @@ class FixedOrf():
 def orf_by_pos(seq, pos): ### Unkown start codon, only to find stop codon
   for i in range(pos, len(seq), codonSize):
     try: codon = seq[i:i+codonSize]
-    except: break
-    if codon in cstop: 
-      i += codonSize
-      break
-  o = FixedOrf(start = pos, stop = i)
-  return o
+    except: FixedOrf(start = pos, stop = i, has_stop_codon = False)
+    if codon in cstop: return FixedOrf(start = pos, stop = i + 3)
+      #i += codonSize
+      #break
+  #o = FixedOrf(start = pos, stop = i)
+  #return o
           
 def orfDict(orflist, alt = True):
   '''dict of start -> stop

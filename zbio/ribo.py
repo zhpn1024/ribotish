@@ -47,13 +47,14 @@ def rstest(x, y, delta = 1e-4, show = False):
 class Ribo: 
   '''riboseq profile for a transcript
   '''
-  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1, saverid = False):
+  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1, saverid = False, paired = False):
     self.length = trans.cdna_length()
     self.nhead, self.ntail = nhead, ntail
     self.trans = trans
     self.rids = {}
+    #print('offdict',offdict)
     if bamload is not None : 
-      self.cnts = bamload.transCounts(trans)
+      self.cnts = bamload.transCounts(trans, compatible = compatible, mis = mis)
       self.total = sum(self.cnts)
       return
     else :
@@ -63,7 +64,7 @@ class Ribo:
     if downsample < 1 : 
       import random
       random.seed(seed)
-    for r in bam.transReadsIter(ribobam, trans, compatible = compatible, mis = mis, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary) : #ribobam.fetch_reads(trans.chr, trans.start, trans.stop):
+    for r in bam.transReadsIter(ribobam, trans, compatible = compatible, mis = mis, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired) : #ribobam.fetch_reads(trans.chr, trans.start, trans.stop):
       l = r.fragment_length()
       off = offset(r, offdict)
       if off is None: continue
@@ -204,7 +205,7 @@ class Ribo:
       blankall = blankall.intersect(blank[i])
     blank.append(blankall)
     show =False
-    if tid == 'ENST00000379198' : show = True
+    #if tid == 'ENST00000379198' : show = True
     for i, o in enumerate(orflist):
       #print self.trans.id, o, o.region, blank
       eps[i], fps[i] = self.efpvalues(o, blank, glm = glm, show = show) #calculate enrichment and frame p-values
@@ -776,15 +777,15 @@ class lenDis:
       self.d1d[l] = [exp.ReadDict() for i in range(d)]
       self.d2d[l] = [exp.ReadDict() for i in range(d)]
       self.cnts[l] = [0] * tl # for transcript level
-  def record(self, l, i):
+  def record(self, l, i, n = 1):
     '''record a read with length l and 5' end position i
     '''
-    self.l[l] += 1
-    self.cnts[l][i] += 1
+    self.l[l] += n
+    self.cnts[l][i] += n
     ir = i - self.cds1
-    if self.dis[0] <= ir < self.dis[1] : self.d1[l][ir - self.dis[0]] += 1
+    if self.dis[0] <= ir < self.dis[1] : self.d1[l][ir - self.dis[0]] += n
     ir = i - self.cds2
-    if self.dis[0] <= ir < self.dis[1] : self.d2[l][ir - self.dis[0]] += 1
+    if self.dis[0] <= ir < self.dis[1] : self.d2[l][ir - self.dis[0]] += n
   def disFrame(self):
     '''calculate frame distribution
     '''
@@ -846,14 +847,15 @@ class lenDis:
           self.dc[l][j][i] += other.dc[l][j][i]
   def size(self):
     return sum(self.l.values())
-  def write(self, outfile):
+  def write(self, outfile = None):
     md1, md2 = {}, {}
     mdf = {}
     for l in self.l: 
       md1[l] = [d.sum() for d in self.d1d[l]] #[0] * len(dis1[l])
       md2[l] = [d.sum() for d in self.d2d[l]] #[0] * len(dis2[l])
       mdf[l] = [d.sum() for d in self.df[l]]
-    outfile.write('{}\n{}\n{}\n{}\n{}\n'.format(self.l, md1, md2, mdf, self.dc))
+    if outfile is not None : outfile.write('{}\n{}\n{}\n{}\n{}\n'.format(self.l, md1, md2, mdf, self.dc))
+    return self.l, md1, md2, mdf, self.dc
 
 def _lendis_gene(args):
   '''quality profile for each gene, not used

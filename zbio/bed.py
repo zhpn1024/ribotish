@@ -21,7 +21,13 @@ class Bed3:
     lst=[]
     for i in range(self.n):
       try: lst.append(self.Format[i](l[i]))
-      except: lst.append('.')
+      except: 
+        if i in (6, 7) : lst.append(lst[1]) # blockstart/stop
+        elif i in (8,) : lst.append(0) # rgb
+        elif i == 9 : lst.append(1)
+        elif i == 10 : lst.append((lst[2]-lst[1],))
+        elif i == 11 : lst.append((0,))
+        else : lst.append('.')
     self.items = tuple(lst)
     self.symbol = self.gid = self.tid = self.id ###
     self.genetype = ''
@@ -138,6 +144,25 @@ class Bed3:
   @property
   def trans(self):
     return [self]
+  @property
+  def thick_start(self):
+    return self.start
+  @property
+  def thick_stop(self):
+    return self.start
+  @property
+  def itemRgb(self):
+    return 0
+  @property
+  def blockCount(self):
+    return 1
+  @property
+  def blockSizes(self):
+    return (len(self),)
+  @property
+  def blockStarts(self):
+    return (0,)
+
   def merge_trans(self):
     return self
   def is_contain(self, p, strict = False): # all bed

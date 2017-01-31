@@ -102,7 +102,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = -1, scale = 1, col = 
     try : ax.legend(loc='best', frameon=False)
     except : pass
   
-def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Candidate ORFs', alt = True):
+def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Putative ORFs in 3 frames', alt = True):
   '''plot possible ORFs
   '''
   if stop < start : stop = trans.cdna_length()

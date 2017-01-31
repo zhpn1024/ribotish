@@ -46,8 +46,8 @@ def set_parser(parser):
   parser.add_argument("--nocompatible", action="store_true", help="Do not require reads compatible with transcript splice junctions")
   parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check")
   #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
-  #parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
-  #parser.add_argument("--qth", type=float, default=1, help="FDR q value threshold")
+  parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
+  parser.add_argument("--qth", type=float, default=1, help="Fisher's FDR q value threshold")
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
   #parser.add_argument("--showtime", action="store_true", help="showtime")
@@ -64,7 +64,7 @@ def run(args):
   # prepare
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible, compatiblemis
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
-  global tpth, fpth, minpth, framebest, framelocalbest, longest, transprofile, TIS_types #fspth
+  global tpth, fpth, minpth, fspth, framebest, framelocalbest, longest, transprofile, TIS_types #fspth
   #global showtime
   #showtime = args.showtime
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
@@ -80,7 +80,7 @@ def run(args):
   enrichtest = args.enrichtest
   transprofile = args.transprofile
   harrwidth = None
-  TIS_types = ['Annotated', 'Truncated', 'Extended', "5'UTR", "3'UTR", 'Inside', 'Novel']
+  TIS_types = ['Annotated', 'Truncated', 'Extended', "5'UTR", "3'UTR", 'Internal', 'Novel']
   if args.harrwidth is not None : harrwidth = args.harrwidth
   elif args.harr : harrwidth = 15
   verbose = args.verbose
@@ -89,6 +89,7 @@ def run(args):
     alt = True
     orf.cstartlike = [c.upper() for c in args.altcodons]
   tpth, fpth, minpth, framebest, framelocalbest = args.tpth, args.fpth, args.minpth, args.framebest, args.framelocalbest # fspth
+  fspth = args.fspth
   longest = args.longest
   tis2ribo = args.tis2ribo
   parts = [0.1 * (i+1) for i in range(args.nparts)]
@@ -225,18 +226,18 @@ def run(args):
   #end = time.time()
   #print('Checking time used: %s' % str(end - start))
   print("{} BH correcting...".format(time.ctime()))
-  profile.BHcorrection(2, total = j, append = True) # Calculate BH FDR of TIS p value
-  profile.BHcorrection(3, total = j, append = True) # Frame p value
-  #profile.BHcorrection(5, total = j, append = True) # Fisher's p value
+  #profile.BHcorrection(2, total = j, append = True) # Calculate BH FDR of TIS p value
+  #profile.BHcorrection(3, total = j, append = True) # Frame p value
+  profile.BHcorrection(5, total = j, append = True) # Calculate BH FDR for Fisher's p value
   outfile = open(args.output,'w')
   s = "Gid\tTid\tSymbol\tGeneType\tGenomePos\tStartCodon\tStart\tStop\tTisType\t"
   s += '\t'.join(title)
-  s += '\tTISQvalue\tRiboQvalue\tAALen\n'
+  s += '\tFisherPvalue\tQvalue\tAALen\n'
   outfile.write(s)
 
   for e in profile:
     #e.data.append(e.q)
-    #if e.data[3] > args.epth or e.data[4] > args.fpth or e.q > args.qth : continue
+    if e.q > args.qth : continue
     outfile.write("%s\t%d\n" % (e, e.length)) #, e.sq))
   
   #end = time.time()
@@ -303,8 +304,8 @@ def _pred_gene(ps): ### trans
     if tl < ribo.minTransLen : return es, j, tpfs, g ##
     #ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
     #tribo = ribo.multiRibo(t, ribobampaths, offdict = riboffdict, compatible = compatible)
-    ttis = ribo.Ribo(t, bamload = tismbl)
-    tribo = ribo.Ribo(t, bamload = ribombl)
+    ttis = ribo.Ribo(t, bamload = tismbl, compatible = compatible, mis = compatiblemis)
+    tribo = ribo.Ribo(t, bamload = ribombl, compatible = compatible, mis = compatiblemis)
     #print t.symbol, t.gid, t.id, tribo.total, ribombl.data
     #if showtime : time1 = time.time()
     score = ttis.abdscore()
@@ -332,7 +333,10 @@ def _pred_gene(ps): ### trans
         minp = rp
         if tp is not None and tp < minp : minp = tp
         if minp >= minpth : continue
-        e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N'])
+        fsp, fss = stat.fisher_method([tps[i], rps[i]]) #
+        if fsp > fspth : continue
+        has_stop = tsq[stop-3:stop] in orf.cstop
+        e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N', fsp], has_stop)
         es.append(e)
     #if showtime : 
       #end = time.time()
@@ -366,13 +370,16 @@ def _pred_gene(ps): ### trans
           minp = rps[i]
           if tps[i] is not None and tps[i] < minp : minp = tps[i]
           if minp >= minpth : continue
-          if tps[i] >= minpth :
+          if tps[i] is None or tps[i] >= minpth :
             if longest : 
               if i > 0 : continue
             else :
               if framelocalbest and rst[i] == 'N' : continue
               if framebest and rst[i][0] != 'T' : continue
-          e = getResult(t, tis, o.stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tps[i], rps[i], rst[i]])
+          fsp, fss = stat.fisher_method([tps[i], rps[i]]) #
+          if fsp > fspth : continue
+          #has_stop = o.stop > 0
+          e = getResult(t, tis, o.stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tps[i], rps[i], rst[i], fsp], o.has_stop_codon)
           #tistype = tisType(tis, o.stop, cds1, cds2)
           #orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
           #tid = "%s\t%s\t%s\t%s\t%s:%d-%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.genome_pos(o.stop), t.strand, orfstr, tistype)
@@ -384,13 +391,14 @@ def _pred_gene(ps): ### trans
           #if e.tistype == 'Extended' : e.cr = interval.cds_region_trans(t, tis, tis+3)
           #else : e.cr = interval.cds_region_trans(t, tis, o.stop)
           es.append(e)
-        j += ol
+        if has_tis : j += ol
+        else : j += 1
   #if showtime : 
       #end = time.time()
       #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
   return es, j, tpfs, g
 
-def getResult(t, tis, stop, cds1, cds2, tsq, values):
+def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   tistype = tisType(tis, stop, cds1, cds2)
   orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3], tis, stop)
   gtis, gstop = t.genome_pos(tis), t.genome_pos(stop)
@@ -400,6 +408,7 @@ def getResult(t, tis, stop, cds1, cds2, tsq, values):
   #values = [ip, ttis.cnts[tis], tp, rp, 'N']
   e = exp.Exp(tid, values)
   e.length = (stop - tis) / 3 - 1
+  if not has_stop : e.length += 1
   #e.sq = tsq[tis:stop]
   e.chr, e.strand, e.tistype = t.chr, t.strand, tistype
   e.gtis, e.gstop = gtis, gstop
