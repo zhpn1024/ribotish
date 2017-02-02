@@ -5,6 +5,6 @@ dist/*
 *.pyc
 *.txt
 *.ipynb
-
+*.pdf
 ._*
 *.bkp

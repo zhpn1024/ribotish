@@ -1,19 +1,19 @@
-README for Ribo TIS Hunter (0.1.0)
+README for Ribo-TISH (0.1.2)
 ==================================
-Time-stamp: <2016-10-12 Peng Zhang>
+<2017-2-2 Peng Zhang>
 
 Introduction
 ============
 
 Translation is a critical step in gene regulation that synthesizes proteins from a given RNA template. The development of the ribosome profiling (riboseq) technique has enables the measurement of translation at a genome-wide level. The basic idea of ribosome profiling is to perform deep-sequencing of the ribosome-protected mRNA fragment (~30 nts), termed ribosome footprints to determine the occupancy of translating ribosomes on a given mRNA. There are several variants of the ribosome profiling technique that are based on the use of different translation inhibitors. The regular ribo-seq utilizes Cycloheximide (CHX), a translation elongation inhibitor to freeze all translating ribosomes. In contrast to CHX, the translation inhibitor lactimidomycin (LTM) and harringtonine (Harr) have a much stronger effect on initiating ribosomes. The use of these two inhibitors allows for the global mapping of translating initiating sites (TISs) when they are coupled with with ribosome profiling (TI-Seq). In addition, when LTM is used sequentially with puromycin (PMY), the TISs can be mapped quantitatively and can be compared between different conditions.
-we present a novel algorithm, named Ribo TIS Hunter (ribotish), for identifying translation activities using ribosome profiling data. Ribo TIS Hunter uses statistical tests to assess the significance of translation activities. It captures significant TISs using negative binomial test, and frame biased open reading frames (ORFs) using rank sum test. Ribo TIS Hunter can also perform differential analysis between two TI-Seq data.
+we present a novel algorithm, named Ribo TIS Hunter (Ribo-TISH), for identifying translation activities using ribosome profiling data. Ribo-TISH uses statistical tests to assess the significance of translation activities. It captures significant TISs using negative binomial test, and frame biased open reading frames (ORFs) using rank sum test. Ribo-TISH can also perform differential analysis between two TI-Seq data.
 
 Install
 =======
 
 Please check the file 'INSTALL' in the distribution.
 
-Usage of Ribo TIS Hunter
+Usage of Ribo-TISH
 ========================
 
 ::
@@ -45,10 +45,12 @@ Quick examples:
 
 For regular riboseq
 ::
+
   ribotish quality -b chx.bam -g gene.gtf
 
 For TI-Seq data
 ::
+
   ribotish quality -b ltm.bam -g gene.gtf -t
 
 Options
@@ -148,6 +150,7 @@ Upper panel: the length distribution of RPFs uniquely mapped to annotated protei
 
 Lower panel: different quality metrics for RPFs uniquely mapped to annotated protein-coding regions.
 Each row shows the RPFs with different lengths.
+
  - Column 1: distribution of RPF 5’ end in 3 frames in all annotated codons. The percentage of the reads from the dominant reading frame is shown. 
  - Column 2: the distribution of RPF 5’end count near annotated TIS. The estimate of the P site offset and TIS accuracy are also shown. The RPFs of a specific length that do not pass threshold are considered as low quality and removed.              
  - Column 3: the distribution of RPF 5’end count near annotated stop codon. 
@@ -163,20 +166,23 @@ This file saves P-site offsets for different reads lengths in python code dict f
 predict
 ~~~~~~~
 
-This is the main function of Rito TIS Hunter. This function predicts ORF/TIS with riboseq bam files. This function uses negative binomial model to fit TI-Seq background and test significance of TIS sites. For regular riboseq data, rank sum test between in frame reads and out frame reads inside the ORF is tested.
+This is the main function of Ribo-TISH. This function predicts ORF/TIS with riboseq bam files. This function uses negative binomial model to fit TI-Seq background and test significance of TIS sites. For regular riboseq data, rank sum test between in frame reads and out frame reads inside the ORF is tested.
 
 Quick examples:
 
 Combine TI-Seq and regular riboseq data
 ::
+
   ribotish predict -t ltm.bam -b chx.bam -g gene.gtf -f genome.fa -o pred.txt
 
 For TI-Seq data only
 ::
+
   ribotish predict -t ltm.bam -g gene.gtf -f genome.fa -o pred.txt
 
 User provided candidates with two regular riboseq data
 ::
+
   ribotish predict -b chx1.bam,chx2.bam -g gene.gtf -f genome.fa -i cand.txt -o pred.txt
 
 Options
@@ -242,7 +248,7 @@ Input P-site offset parameter files for ```-b``` bam files. Same as ```--tispara
 
 Group transcript according to TIS reads density quantile. Default: 10.
 
-TIS background estimation uses ORF in-frame read counts to estimate negative binomial parameters. Since different transcripts have different expression levels, the background is different for highly expressed and lowly expressed transcripts. Ribo TIS Hunter groups expressed transcripts into N parts based on TIS reads density of the transcript. Each transcript group have same total number of TIS reads.
+TIS background estimation uses ORF in-frame read counts to estimate negative binomial parameters. Since different transcripts have different expression levels, the background is different for highly expressed and lowly expressed transcripts. Ribo-TISH groups expressed transcripts into N parts based on TIS reads density of the transcript. Each transcript group have same total number of TIS reads.
 
 -e ESTPATH
 ``````````
@@ -351,8 +357,10 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 :TISPvalue:	One tailed negative binomial test p-value for TISCount (TIS test)
 :RiboPvalue:	One tailed rank sum test p-value for regular riboseq frame bias inside ORF (frame test)
 :RiboPStatus:	For all ORFs sharing same stop codon, 'T1' means top (best) p-value, 'L1' means local best p-value, 'N' means other. All 'N' in ```-i``` mode.
+:FisherPvalue:	Combination of TIS and Ribo p-values using Fisher's method
 :TISQvalue:	BH correction q-value of TIS test
 :RiboQvalue:	BH correction q-value of frame test
+:FisherQvalue:	BH correction q-value of Fisher's p-value
 :AALen:		Amino acid length of the ORF
 
 tisdiff
@@ -462,4 +470,3 @@ The output is a txt file all differential TIS results that fit the thresholds. S
 :FoldChange:	Fold change value after normalization, 'None' if either count is 0
 :DiffPvalue:	Binomial differential test p-value, one tailed.
 :DiffQvalue:	BH correction q-value of DiffPvalue
-

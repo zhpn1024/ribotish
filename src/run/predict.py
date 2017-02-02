@@ -167,7 +167,7 @@ def run(args):
   profile = exp.Profile()
   #if enrichtest : title = ['TISGroup', 'TISCounts', 'TISPvalue', 'EnrichPvalue', 'EnrichPStatus']
   title = ['TISGroup', 'TISCounts', 'TISPvalue', 'RiboPvalue', 'RiboPStatus']
-  j = 0
+  j = [0,0] # total number of ORF/TIS for BH correction
   #agenefile = open(args.agenepath,'r')
   gene_iter = io.geneIter(args.agenepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
   para_iter = genePara(gene_iter, inorf)
@@ -185,7 +185,8 @@ def run(args):
   known_tis = {}
   for result in pred_iter:
     es, ji, tpfs, g = result
-    j += ji
+    j[0] += ji[0]
+    j[1] += ji[1]
     for e in es : 
       profile.add_exp(e)
       if verbose >= 2 : print e
@@ -226,13 +227,13 @@ def run(args):
   #end = time.time()
   #print('Checking time used: %s' % str(end - start))
   print("{} BH correcting...".format(time.ctime()))
-  #profile.BHcorrection(2, total = j, append = True) # Calculate BH FDR of TIS p value
-  #profile.BHcorrection(3, total = j, append = True) # Frame p value
-  profile.BHcorrection(5, total = j, append = True) # Calculate BH FDR for Fisher's p value
+  profile.BHcorrection(2, total = j[1], append = True) # Calculate BH FDR of TIS p value
+  profile.BHcorrection(3, total = j[0], append = True) # Frame p value
+  profile.BHcorrection(5, total = j[1], append = True) # Calculate BH FDR for Fisher's p value
   outfile = open(args.output,'w')
   s = "Gid\tTid\tSymbol\tGeneType\tGenomePos\tStartCodon\tStart\tStop\tTisType\t"
   s += '\t'.join(title)
-  s += '\tFisherPvalue\tQvalue\tAALen\n'
+  s += '\tFisherPvalue\tTISQvalue\tFrameQvalue\tFisherQvalue\tAALen\n'
   outfile.write(s)
 
   for e in profile:
@@ -292,7 +293,7 @@ def _pred_gene(ps): ### trans
   '''
   #if showtime : timestart = time.time()
   g, candidates = ps
-  es, j = [], 0
+  es, j = [], [0,0]
   genome = fa.Fa(genomefapath)
   has_tis = len(tisbampaths) > 0
   tismbl = ribo.multiRiboGene(g, tisbampaths, offdict = tisoffdict, compatible = compatible, mis = compatiblemis)
@@ -323,17 +324,18 @@ def _pred_gene(ps): ### trans
   # user provided candidates
     if candidates is not None : 
       for tis, stop in candidates[t.id]:
-        j += 1
+        j[0] += 1
+        j[1] += 1
         if has_tis : tp = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
         else : tp = None
         if enrichtest : rp = tribo.enrich_test(tis, stop)
         else : rp = tribo.frame_test(tis, stop)
-        if tp is not None and tp >= tpth : continue 
-        if rp >= fpth : continue # or fisher > fspth 
+        if tp is not None and tp > tpth : continue 
+        if rp > fpth : continue # or fisher > fspth 
         minp = rp
         if tp is not None and tp < minp : minp = tp
-        if minp >= minpth : continue
-        fsp, fss = stat.fisher_method([tps[i], rps[i]]) #
+        if minp > minpth : continue
+        fsp, fss = stat.fisher_method([tp, rp]) #
         if fsp > fspth : continue
         has_stop = tsq[stop-3:stop] in orf.cstop
         e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N', fsp], has_stop)
@@ -365,12 +367,12 @@ def _pred_gene(ps): ### trans
             else : rps[i] = tribo.frame_test(tis, o.stop)
         rst = pvalStatus(rps)
         for i, tis in enumerate(starts) : 
-          if tps[i] is not None and tps[i] >= tpth : continue
-          if rps[i] >= fpth : continue # or fishers[i] > fspth
+          if tps[i] is not None and tps[i] > tpth : continue
+          if rps[i] > fpth : continue # or fishers[i] > fspth
           minp = rps[i]
           if tps[i] is not None and tps[i] < minp : minp = tps[i]
-          if minp >= minpth : continue
-          if tps[i] is None or tps[i] >= minpth :
+          if minp > minpth : continue
+          if tps[i] is None or tps[i] > minpth :
             if longest : 
               if i > 0 : continue
             else :
@@ -391,8 +393,9 @@ def _pred_gene(ps): ### trans
           #if e.tistype == 'Extended' : e.cr = interval.cds_region_trans(t, tis, tis+3)
           #else : e.cr = interval.cds_region_trans(t, tis, o.stop)
           es.append(e)
-        if has_tis : j += ol
-        else : j += 1
+        #if has_tis : 
+        j[1] += ol
+        j[0] += 1
   #if showtime : 
       #end = time.time()
       #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
