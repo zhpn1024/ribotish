@@ -1,4 +1,4 @@
-README for Ribo-TISH (0.1.2)
+README for Ribo-TISH (0.1.4)
 ==================================
 <2017-2-2 Peng Zhang>
 
@@ -356,7 +356,7 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 :TISCount:	Number of reads with P-site at TIS site
 :TISPvalue:	One tailed negative binomial test p-value for TISCount (TIS test)
 :RiboPvalue:	One tailed rank sum test p-value for regular riboseq frame bias inside ORF (frame test)
-:RiboPStatus:	For all ORFs sharing same stop codon, 'T1' means top (best) p-value, 'L1' means local best p-value, 'N' means other. All 'N' in ```-i``` mode.
+:RiboPStatus:	For all ORFs sharing same stop codon, 'T' means top (best) p-value, 'L' means local best p-value, 'N' means other. All 'N' in ```-i``` mode.
 :FisherPvalue:	Combination of TIS and Ribo p-values using Fisher's method
 :TISQvalue:	BH correction q-value of TIS test
 :RiboQvalue:	BH correction q-value of frame test
