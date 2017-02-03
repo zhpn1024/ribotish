@@ -1,5 +1,5 @@
 =================================
-INSTALL Guide For Ribo TIS Hunter
+INSTALL Guide For Ribo-TISH
 =================================
 
 Please check the following instructions to complete your installation.
@@ -17,12 +17,12 @@ Python version must be equal to *2.7*.
 .. _Scipy: http://www.scipy.org/Download
 .. _Matplotlib: http://matplotlib.org/users/installing.html
 
-Ribo TIS Hunter cannot run on Windows because Pysam_ do not support Windows installation.
+Ribo-TISH cannot run on Windows because Pysam_ do not support Windows installation.
 
 Easy installation through PyPI
 ==============================
 
-The easiest way to install Ribo TIS Hunter is through PyPI system. Get pip_ if it's not available in your system. 
+The easiest way to install Ribo-TISH is through PyPI system. Get pip_ if it's not available in your system. 
 
 Then under command line::
 
@@ -30,7 +30,7 @@ Then under command line::
 
 PyPI will install all dependents automatically if they are absent.  
 
-To upgrade Ribo TIS Hunter, type::
+To upgrade Ribo-TISH, type::
 
   $ pip install -U ribotish
 
@@ -66,7 +66,7 @@ After running the setup script, you might need to add the install location to yo
 PYTHONPATH
 ~~~~~~~~~~
 
-To set up your ``PYTHONPATH`` environment variable, you may need to add the value ``PREFIX/lib/pythonX.Y/site-packages`` to your existing ``PYTHONPATH``. In this value, X.Y stands for the major–minor version of Python you are using (such as 2.7). ``PREFIX`` is the install prefix where you installed ribotish. If you did not specify a prefix on the command line, MACS will be installed using Python's sys.prefix value.
+To set up your ``PYTHONPATH`` environment variable, you may need to add the value ``PREFIX/lib/pythonX.Y/site-packages`` to your existing ``PYTHONPATH``. In this value, X.Y stands for the major–minor version of Python you are using (such as 2.7). ``PREFIX`` is the install prefix where you installed ribotish. If you did not specify a prefix on the command line, it will be installed using Python's sys.prefix value.
 
 On Linux, using bash, you can include the new value in ``PYTHONPATH`` by
 adding this line to ``~/.bashrc`` or ``~/.bash_profile``. For example::

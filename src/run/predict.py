@@ -47,7 +47,7 @@ def set_parser(parser):
   parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check")
   #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
   parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
-  parser.add_argument("--qth", type=float, default=1, help="Fisher's FDR q value threshold")
+  parser.add_argument("--fsqth", type=float, default=1, help="Fisher's FDR q value threshold")
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
   #parser.add_argument("--showtime", action="store_true", help="showtime")
@@ -229,7 +229,9 @@ def run(args):
   print("{} BH correcting...".format(time.ctime()))
   profile.BHcorrection(2, total = j[1], append = True) # Calculate BH FDR of TIS p value
   profile.BHcorrection(3, total = j[0], append = True) # Frame p value
-  profile.BHcorrection(5, total = j[1], append = True) # Calculate BH FDR for Fisher's p value
+  i = 1
+  if len(tisbampaths) == 0 : i = 0
+  profile.BHcorrection(5, total = j[i], append = True) # Calculate BH FDR for Fisher's p value
   outfile = open(args.output,'w')
   s = "Gid\tTid\tSymbol\tGeneType\tGenomePos\tStartCodon\tStart\tStop\tTisType\t"
   s += '\t'.join(title)
@@ -238,7 +240,7 @@ def run(args):
 
   for e in profile:
     #e.data.append(e.q)
-    if e.q > args.qth : continue
+    if e.q > args.fsqth : continue
     outfile.write("%s\t%d\n" % (e, e.length)) #, e.sq))
   
   #end = time.time()

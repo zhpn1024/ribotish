@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.4)
 ==================================
-<2017-2-2 Peng Zhang>
+<2017-2-3 Peng Zhang>
 
 Introduction
 ============
@@ -11,7 +11,7 @@ we present a novel algorithm, named Ribo TIS Hunter (Ribo-TISH), for identifying
 Install
 =======
 
-Please check the file 'INSTALL' in the distribution.
+Please check the file 'INSTALL.rst' in the distribution.
 
 Usage of Ribo-TISH
 ========================
@@ -24,7 +24,7 @@ Usage of Ribo-TISH
 
 :Example for prediction: ``ribotish predict -t ltm.bam -b chx.bam -g gene.gtf -f genome.fa -o pred.txt``
 
-:Example for differential TIS: ``ribotish tisdiff -1 pred1.txt -2 pred2.txt -a ltm1.bam -b ltm2.bam -g gene.gtf -o diff.txt --plotout diff.pdf``
+:Example for differential TIS: ``ribotish tisdiff -1 pred1.txt -2 pred2.txt -a qti1.bam -b qti2.bam -g gene.gtf -o diff.txt --plotout diff.pdf``
 
 There are 3 functions available as sub-commands.
 
@@ -32,7 +32,10 @@ There are 3 functions available as sub-commands.
 :predict:	Main function to predict ORF/TIS.
 :tisdiff:	Call diffential TIS between two TIS data
 
-The main input data should be in bam file format. Reads should be trimmed and aligned to genome. Intron splicing is supported. Some attributes are needed such as NM, NH and MD. For STAR, ```--outSAMattributes All``` should be set. bam file should be sorted and indexed by samtools.
+The main input data should be in bam file format. Reads should be trimmed and aligned to genome. Intron splicing is supported. Some attributes are needed such as NM, NH and MD. For STAR, ```--outSAMattributes All``` should be set. bam file should be sorted and indexed by samtools_.
+
+.. _samtools: https://github.com/samtools/samtools
+
 
 quality
 ~~~~~~~
@@ -281,7 +284,7 @@ Use provided alternative start codons, comma seperated, e.g. ```--altcodons CTG,
 --tis2ribo
 ``````````
 
-Add TIS bam counts to regular riboseq counts. Use TIS data also for ORF frame test. This option will turn on automatically if ```-b``` is not provided.
+Add TIS bam counts to regular riboseq counts. Use TIS data also for ORF frame test. This option will be turned on automatically if ```-b``` is not provided.
 
 --harr
 ``````
@@ -324,11 +327,20 @@ TIS p value threshold. Default: 0.05.
 
 Frame p value threshold. Default: 0.05.
 
-
 --minpth MINPTH
 ```````````````
 
 At least one of TIS or frame p value should be lower than this threshold. Default: 0.05.
+
+--fspth FSPTH
+`````````````
+
+Fisher's p value threshold. Default: 0.05.
+
+--fsqth FSQTH
+`````````````
+
+Fisher's FDR q value threshold. Default: 1.
 
 -p NUMPROC
 ``````````
@@ -372,7 +384,7 @@ Quick examples:
 
 ::
 
-  ribotish tisdiff -1 pred1.txt -2 pred2.txt -a ltm1.bam -b ltm2.bam -g gene.gtf -o diff.txt --plotout diff.pdf
+  ribotish tisdiff -1 pred1.txt -2 pred2.txt -a qti1.bam -b qti2.bam -g gene.gtf -o diff.txt --plotout diff.pdf
 
 Options
 --------------
