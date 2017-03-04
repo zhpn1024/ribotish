@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.4)
 ==================================
-<2017-2-3 Peng Zhang>
+<2017-2-13 Peng Zhang>
 
 Introduction
 ============
@@ -479,6 +479,6 @@ OUTPUT
 ```````
 The output is a txt file all differential TIS results that fit the thresholds. Some of the columns are:
 
-:FoldChange:	Fold change value after normalization, 'None' if either count is 0
+:FoldChange:	Fold change (b/a) value after normalization
 :DiffPvalue:	Binomial differential test p-value, one tailed.
 :DiffQvalue:	BH correction q-value of DiffPvalue

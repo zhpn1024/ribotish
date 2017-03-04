@@ -27,6 +27,7 @@ def set_parser(parser):
   parser.add_argument("--plotout", type=str, help="Scatter plot output pdf file")
   parser.add_argument("--figsize", type=int2, default=(8,8), help="Scatter plot figure size (default: 8,8)")
   # other options
+  parser.add_argument("--qi", type=int, default=15, help="Index of TIS q value (default: 15)")
   parser.add_argument("-f", type=float, dest="foldchange", default=1.5, help="Minimum fold change threshold (default: 1.5)")
   parser.add_argument("--pth", type=float, default=0.05, help="Input TIS p value threshold (default: 0.05)")
   parser.add_argument("--qth", type=float, default=0.1, help="Input TIS q value threshold (default: 0.1)")
@@ -45,19 +46,6 @@ def int2(s):
   lst = eval('['+s+']')
   return tuple(map(int, lst))
 
-use_message = '''
-python tisDiff.py [options] -1 tis1path -2 tis2path -a tisbam1path -b tisbam2path -g gtfpath -o output
-options:
--p plotout : Scatter plot
--e estpath : TIS background estimation result. (tisbampath+'.bgest.txt' if not exist)
--s inestpath : Input background estimation result file instead of instant estimation
---figsize <width>,<height> : figure size (8,8)
---addchr : Auto add 'chr' for input GTF file
--r|--tispara parapath : input parameter file for tisbam (tisbampath+'.para.py')
---flank <int> : flank range of TIS (1).
---pth <float> : Frame p value threshold. Default: 0.05
---qth <float> : FDR q value threshold. Default: 0.1
-'''
 
 #profile = exp.profile()
 title = ['TIS1count', 'TIS1sig', 'TIS2count', 'TIS2sig']
@@ -66,7 +54,14 @@ def sig(data):
   '''if data fit thresholds
   '''
   return data[1] < pth and data[2] < qth
-
+def get_tis(gp):
+  '''get TIS genome position
+  '''
+  lst = gp.split(':')
+  lst2 = lst[1].split('-')
+  if lst[2] != '-' : lst[1] = lst2[0]
+  else : lst[1] = lst2[-1]
+  return ':'.join(lst)
 def run(args):
   '''Main function for differential TIS
   '''
@@ -90,27 +85,34 @@ def run(args):
   trans = {}
   gname = {}
   t1, t2 = {}, {}
+  n = 0
   for l in tis1file :
     lst = l.strip().split()
     try : tis = (lst[1], int(lst[6]))
     except : continue
-    cnt, pval, qval =int(lst[10]), float(lst[11]), float(lst[14])
+    cnt, pval, qval =int(lst[10]), float(lst[11]), float(lst[args.qi])
     #tis, ip, cnt, pval, qval = autodetect(lst)
     #if pval >= pth or qval >= qth : break ## Should be ordered
     t1[tis] = cnt, pval, qval
     #if lst[0] not in g1 : g1[
     #trans[tis] = lst[0]
+    if sig(t1[tis]) : n += 1
+    lst[4] = get_tis(lst[4])
     gname[tis] =  '\t'.join(lst[:9]) # information for the TIS
+  if args.verbose : print("{} TISs in 1.".format(n))
+  n = 0
   for l in tis2file :
     lst = l.strip().split()
     try : tis = (lst[1], int(lst[6]))
     except : continue
-    cnt, pval, qval =int(lst[10]), float(lst[11]), float(lst[14])
+    cnt, pval, qval =int(lst[10]), float(lst[11]), float(lst[args.qi])
     #if pval >= pth or qval >= qth : break
     t2[tis] = cnt, pval, qval
     #trans[tis] = lst[0]
+    if sig(t2[tis]) : n += 1
+    lst[4] = get_tis(lst[4])
     gname[tis] = '\t'.join(lst[:9])
-  
+  if args.verbose : print("{} TISs in 2.".format(n))
   profile = exp.Profile()
   profile2 = exp.Profile() # for TMM
   g1, g2 = {}, {} # TIS genes need to be analyzed
@@ -136,10 +138,10 @@ def run(args):
     elif sig(t2[tis]) : 
       if tis[0] not in g1 : g1[tis[0]] = []
       g1[tis[0]].append(tis[1])
-  
+  if args.verbose : print("{} TISs in both.".format(len(profile2)))
   if args.verbose : print ('Estimate scale factor...')
   f = profile2.TMM(i1 = 0, i2 = 2)
-  if args.verbose : print ('f = {}'.format(f))
+  if args.verbose : print ('TMM f = {}'.format(f))
 
   if args.verbose : print ("Reading bams...")
   u1, u2 = [[],[]], [[],[]] # Unique TIS lists for plot
@@ -162,7 +164,7 @@ def run(args):
       values = [t1[tis][0], True, c, False]
       e = exp.Exp(gname[tis], values)
       profile.add_exp(e)
-        
+  if args.verbose : print("{} TISs in total.".format(len(profile)))
   if args.verbose : print ('Diff test...')
   exps = profile.exps.values()
   r = 2 ** (-f)
@@ -170,10 +172,10 @@ def run(args):
   for e in exps:
     x, y = e.data[0], e.data[2]
     n = x + y
-    if x == 0 : fc, alt = None, 'less'
-    elif y == 0 : fc, alt = None, 'greater'
+    if x == 0 : fc, alt = 'INF', 'less'
+    elif y == 0 : fc, alt = 0, 'greater'
     else : 
-      fc = 1.0 * x * r / y
+      fc = y / (1.0 * x * r) # / y
       if r * x < y : alt = 'less'
       elif r * x > y : alt = 'greater'
     #e.data.append(stat.ACtest(e.data[0], e.data[2], r, alt = alt))
@@ -193,9 +195,15 @@ def run(args):
   outfile.write(s)
   for e in profile :
     fc = e.data[4]
-    if fc is not None and max(fc, 1/fc) < args.foldchange : continue
-    if e.data[5] > args.opth or e.data[6] > args.oqth : continue
-    outfile.write(str(e)+'\n')
+    e.is_q = e.is_fc = True
+    if fc != 'INF' and fc != 0 and max(fc, 1/fc) < args.foldchange : 
+      e.is_fc = False
+      #continue
+    if e.data[5] > args.opth or e.data[6] > args.oqth : 
+      e.is_q = False
+      #continue
+    if e.is_q and e.is_fc : 
+      outfile.write(str(e)+'\n')
   #profile.write(outfile)
 
   # Plot
@@ -203,12 +211,12 @@ def run(args):
     if args.verbose : print ("Ploting...")
     from zbio import plot
     plot.figure(figsize = args.figsize)
-    qd1 = [math.log(e.data[0]+1,2) for e in exps if e.data[6] < args.oqth and e.data[6] < args.opth and (e.data[4] is None or max(e.data[4], 1/e.data[4]) > args.foldchange)]
-    qd2 = [math.log(e.data[2]+1,2) for e in exps if e.data[6] < args.oqth and e.data[6] < args.opth and (e.data[4] is None or max(e.data[4], 1/e.data[4]) > args.foldchange)]
-    pd1 = [math.log(e.data[0]+1,2) for e in exps if e.data[6] < args.oqth and e.data[6] < args.opth and e.data[4] is not None and max(e.data[4], 1/e.data[4]) <= args.foldchange]
-    pd2 = [math.log(e.data[2]+1,2) for e in exps if e.data[6] < args.oqth and e.data[6] < args.opth and e.data[4] is not None and max(e.data[4], 1/e.data[4]) <= args.foldchange]
-    nd1 = [math.log(e.data[0]+1,2) for e in exps if e.data[6] >= args.oqth or e.data[6] >= args.opth]
-    nd2 = [math.log(e.data[2]+1,2) for e in exps if e.data[6] >= args.oqth or e.data[6] >= args.opth]
+    qd1 = [math.log(e.data[0]+1,2) for e in exps if e.is_q and e.is_fc]
+    qd2 = [math.log(e.data[2]+1,2) for e in exps if e.is_q and e.is_fc]
+    pd1 = [math.log(e.data[0]+1,2) for e in exps if e.is_q and not e.is_fc]
+    pd2 = [math.log(e.data[2]+1,2) for e in exps if e.is_q and not e.is_fc]
+    nd1 = [math.log(e.data[0]+1,2) for e in exps if not e.is_q]
+    nd2 = [math.log(e.data[2]+1,2) for e in exps if not e.is_q]
     plot.scatter(qd1, qd2, alpha=0.2, edgecolors='none', color='r', label='q < {} & FC > {}'.format(args.oqth, args.foldchange))
     plot.scatter(pd1, pd2, alpha=0.2, edgecolors='none', color='y', label='q < {} & FC <= {}'.format(args.oqth, args.foldchange))
     plot.scatter(nd1, nd2, alpha=0.2, edgecolors='none', color='g', label='q >= {}'.format(args.oqth))
@@ -223,7 +231,7 @@ def run(args):
     d = - (f - math.log(args.foldchange, 2)) / 2
     plot.plot([0-d,m-d],[0+d,m+d], color='r', linestyle = ':')
     plot.save(args.plotout)
-    
+    '''
     exps = profile2.exps.values()
     plot.figure(figsize = args.figsize)
     plot.axhline(f)
@@ -234,7 +242,7 @@ def run(args):
     aa = [e.A for e in exps if not e.select]
     plot.scatter(aa, ms, alpha=0.1, edgecolors='none',color='b')
     plot.save('matmm.pdf')
-
+'''
 
     
 def transPara(trans_iter, g1, g2):
