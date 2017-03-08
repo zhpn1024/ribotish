@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.4)
 ==================================
-<2017-2-13 Peng Zhang>
+<2017-3-8 Peng Zhang>
 
 Introduction
 ============
@@ -441,15 +441,15 @@ Scatter plot figure size. Default: 8,8.
 
 Minimum fold change threshold. Default: 1.5.
 
---pth PTH
+--ipth IPTH
 ```````````
 
 Input TIS p value threshold. Default: 0.05.
 
---qth QTH
+--iqth IQTH
 ```````````
 
-Input TIS q value threshold. Default: 0.1.
+Input TIS q value threshold. Default: 0.05.
 
 --opth OPTH
 ```````````
@@ -459,7 +459,7 @@ Output TIS diff p value threshold. Default: 0.05.
 --oqth OQTH
 ```````````
 
-Output TIS diff q value threshold. Default: 0.1.
+Output TIS diff q value threshold. Default: 0.05.
 
 -p NUMPROC
 ``````````

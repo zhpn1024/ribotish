@@ -29,10 +29,10 @@ def set_parser(parser):
   # other options
   parser.add_argument("--qi", type=int, default=15, help="Index of TIS q value (default: 15)")
   parser.add_argument("-f", type=float, dest="foldchange", default=1.5, help="Minimum fold change threshold (default: 1.5)")
-  parser.add_argument("--pth", type=float, default=0.05, help="Input TIS p value threshold (default: 0.05)")
-  parser.add_argument("--qth", type=float, default=0.1, help="Input TIS q value threshold (default: 0.1)")
+  parser.add_argument("--ipth", type=float, default=0.05, help="Input TIS p value threshold (default: 0.05)")
+  parser.add_argument("--iqth", type=float, default=0.05, help="Input TIS q value threshold (default: 0.05)")
   parser.add_argument("--opth", type=float, default=0.05, help="Output TIS diff p value threshold (default: 0.05)")
-  parser.add_argument("--oqth", type=float, default=0.05, help="Output TIS diff q value threshold (default: 0.1)")
+  parser.add_argument("--oqth", type=float, default=0.05, help="Output TIS diff q value threshold (default: 0.05)")
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
   
