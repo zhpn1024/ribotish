@@ -549,7 +549,7 @@ class BamLoadChr:
         if key not in self.data[r.strand][p] : self.data[r.strand][p][key] = 0
         self.data[r.strand][p][key] += 1
   def __repr__(self):
-    return 'BamLoad {}:{}:{}'.format(self.filename, self.chr, self.strand)
+    return 'BamLoad {}:{}:{}'.format(self.bampath, self.chr, self.strand)
   def transCounts(self, trans, compatible = False, mis = 2):
     if self.strand != '.' and self.strand != trans.strand :
       print('Strand not match: {}, {}'.format(self, trans.id))

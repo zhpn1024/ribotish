@@ -212,6 +212,9 @@ class gtfTrans(Exon):
     self.stop_codon = None
     self.other = []
   def add_exon(self, e): 
+    if e.strand != self.strand : 
+      print('Wrong exon strand: {} {} {} {}'.format(e.gid, e.tid, e.strand, self.strand))
+      e.strand = self.strand
     if e.type == 'exon': self.exons.append(e)
     elif e.type == 'CDS': self.cds.append(e)
     elif e.type == 'UTR': self.utr.append(e)
@@ -448,6 +451,9 @@ class gtfGene(Exon):
     self.trans = []
     #self.type = lst[1]
   def add_trans(self, tr):
+    if tr.strand != self.strand :
+      print('Wrong trans strand: {} {} {} {}'.format(tr.gid, tr.tid, tr.strand, self.strand))
+      tr.strand = self.strand
     self.trans.append(tr)
     #self.check()
   def __repr__(self):
