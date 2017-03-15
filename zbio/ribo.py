@@ -1096,7 +1096,7 @@ def get_offset(arr, dis = [-40,20], frame = 0, defOffset = defOffset, flank = 6,
   a1m = max(a1) # / 2.0
   aim = max(ai)
   #th = int(((a0m + 1) * (a1m + 1)) ** 0.5)
-  th = int((a0m + a1m) / 6.0) ###
+  th = a0m + int((a1m - a0m) / 6.0) ###
   for p in range(-defOffset - flank + 1, -defOffset + flank):
     if p % codonSize != frame : continue
     if tis :
