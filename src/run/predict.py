@@ -225,7 +225,7 @@ def run(args):
     for e in es : 
       profile.add_exp(e)
       if verbose >= 2 : print e
-    if transprofile : 
+    if transprofile is not None : 
       for tid in tpfs :
         tpfile.write(io.tabjoin(tid, tpfs[tid])+'\n')
     if g.chr not in cds_regions : 
@@ -347,15 +347,16 @@ def _pred_gene(ps): ### trans
   genome = fa.Fa(genomefapath)
   has_tis = len(tisbampaths) > 0
   load = True
-  if candidates is not None and len(candidates) == 0 :  return es, j, tpfs, g
-  if candidates is not None and len(pf) >= len(candidates) : load = False
+  if candidates is not None :
+    if len(candidates) == 0 :  return es, j, tpfs, g
+    if len(pf) >= len(candidates) : load = False
   if len(pf) >= len(g.trans) : load = False
   if load :
     tismbl = ribo.multiRiboGene(g, tisbampaths, offdict = tisoffdict, compatible = compatible, mis = compatiblemis, paired = paired)
     ribombl = ribo.multiRiboGene(g, ribobampaths, offdict = riboffdict, compatible = compatible, mis = compatiblemis, paired = paired)
   #tpfs = {} #trans profiles
   for t in g.trans:
-    if candidates is not None and t.id not in candidates : continue
+    #if candidates is not None and t.id not in candidates : continue
     tl = t.cdna_length()
     if tl < ribo.minTransLen : continue # return es, j, tpfs, g ##
     #ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
@@ -383,12 +384,13 @@ def _pred_gene(ps): ### trans
     cds1 = t.cds_start(cdna = True) 
     cds2 = t.cds_stop(cdna = True) 
     tsq = genome.transSeq(t)
-    tpfs = {}
+    #tpfs = {}
     if transprofile is not None:
       tid = '{}\t{}\t{}'.format(t.gid, t.id, t.symbol)
       tpfs[tid] = '{}\t{}'.format(ttis.cnts_dict_str(), tribo.cnts_dict_str())
   # user provided candidates
     if candidates is not None : 
+      if t.id not in candidates : continue
       for tis, stop in candidates[t.id]:
         j[0] += 1
         j[1] += 1

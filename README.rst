@@ -364,6 +364,18 @@ Output RPF P-site profile for each transcript
 ``````````````````````
 Input RPF P-site profile for each transcript, instead of reading bam reads. The profile file is the output file from ```--transprofile``` option. Save time for re-running.
 
+Increase output verbosity.
+
+--seq
+`````
+
+Report ORF sequences.
+
+--aaseq
+````````
+
+Report amino acid sequences.
+
 Output files
 ------------
 
