@@ -1,6 +1,6 @@
-README for Ribo-TISH (0.1.5)
+README for Ribo-TISH (0.1.6)
 ==================================
-<2017-3-15 Peng Zhang>
+<2017-3-22 Peng Zhang>
 
 Introduction
 ============
@@ -208,8 +208,9 @@ At least one bam file should be provided by either ```-t``` or ```-b```.
 -g GENEPATH
 ```````````
 
-Gene annotation file for TIS background estimation and ORF prediction. Acceptable formats include gtf, gff, bed and genepred with gene names. Input file format can be auto detected or specified by ```--geneformat``` option. 
-If user need to use different gene annotation files for background estimation and prediction, use ```-a``` option to provide another gene annotation for prediction. If user provided candidates ```-i``` option is set, the transcript annotation for the candidates should be found in gene annotation file.
+Gene annotation file for ORF prediction. Acceptable formats include gtf, gff, bed and genepred with gene names. Input file format can be auto detected or specified by ```--geneformat``` option. 
+If user need to predict on only non-coding genes and use a different gene annotation file for known ORF annotation and background estimation, use ```-a``` option to provide another gene annotation for known ORF annotation. 
+If user provided candidates ```-i``` option is set, the transcript annotation for the candidates should be found in gene annotation file.
 
 -f GENOMEFAPATH
 ```````````````
@@ -270,7 +271,7 @@ Input background estimation result file instead of instant estimation. By defaul
 -a AGENEPATH
 ````````````
 
-Another gene annotation file for ORF prediction instead of ```-g``` gene file
+Another gene annotation file for ORF annotation instead of ```-g``` gene file
 
 --alt
 `````
@@ -354,6 +355,14 @@ Number of processes. Default: 1
 
 Increase output verbosity.
 
+--transprofile TRANSPROFILE
+```````````````````````````
+
+Output RPF P-site profile for each transcript
+
+--inprofile INPROFILE 
+``````````````````````
+Input RPF P-site profile for each transcript, instead of reading bam reads. The profile file is the output file from ```--transprofile``` option. Save time for re-running.
 
 Output files
 ------------

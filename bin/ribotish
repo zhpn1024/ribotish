@@ -6,7 +6,7 @@ This code is free software; you can redistribute it and/or modify it
 under the terms of the BSD License (see the file COPYING included with
 the distribution).
 @status: experimental
-@version: 0.1.0
+@version: 0.1.6
 @author:  Peng Zhang
 @contact: zhpn1024@163.com
 """
@@ -29,8 +29,7 @@ def main():
     start = time.time()
     commands[cmd].run(args)
     end = time.time()
-    print('Time used: %s' % str(end - start))
-
+    print('{} Done! Time used: {} s.'.format(time.ctime(), (end - start)))
 
 def prepare_argparser ():
   """Prepare argparser object.

@@ -1,5 +1,5 @@
 #import sys, getopt
-from zbio import ribo, plot
+from ribotish.zbio import ribo, plot
 
 def help():
   return "Quality control for riboseq data"
@@ -26,6 +26,7 @@ def set_parser(parser):
   parser.add_argument("--maxNH", type=int, default=1, help="Max NH value allowed for bam alignments (default: 1)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
   parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
+  parser.add_argument("--paired", action="store_true", help="Reads are paired end")
   
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes (default: 1)")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
@@ -55,7 +56,7 @@ def run(args):
     if args.output is None : 
       args.output = args.ribobampath[:-4] + '_qual.txt'
     # read data
-    results = ribo.lendis(args.genepath, args.ribobampath, lens = args.lens, dis = args.dis, minR = minR, m0 = m0, 
+    results = ribo.lendis(args.genepath, args.ribobampath, lens = args.lens, dis = args.dis, minR = minR, m0 = m0, paired = args.paired,
                           cdsBins = args.bins, numProc = args.numProc, verbose = args.verbose, geneformat = args.geneformat)
     # write quality data
     outfile = open(args.output, 'w')

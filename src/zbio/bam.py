@@ -520,7 +520,7 @@ def getBamLoadChr(args):
   return BamLoadChr(bampath, chr, region, strand, posFunc, maxNH, minMapQ, secondary)
 
 class BamLoadChr:
-  def __init__(self, bampath, chr, region = None, strand = '.', posFunc = end5, maxNH = None, minMapQ = None, secondary = False):
+  def __init__(self, bampath, chr, region = None, strand = '.', posFunc = end5, maxNH = None, minMapQ = None, secondary = False, paired = False):
     self.chr = chr
     self.strand = strand
     self.bampath = bampath
@@ -536,7 +536,7 @@ class BamLoadChr:
         return
     if region is None : region = [[None, None]]
     for start, stop in region : 
-      for r in bamfile.fetch_reads(chr, start, stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
+      for r in bamfile.fetch_reads(chr, start, stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired):
         if r.strand not in self.data : continue
         p = posFunc(r)
         #print p

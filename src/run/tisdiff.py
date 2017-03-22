@@ -1,4 +1,4 @@
-from zbio import gtf, bam, ribo, stat, exp, tools, orf, fa, interval, io
+from ribotish.zbio import gtf, bam, ribo, stat, exp, tools, orf, fa, interval, io
 import math, time, itertools
 from os.path import isfile
 
@@ -20,6 +20,8 @@ def set_parser(parser):
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
   parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
+  parser.add_argument("--paired", action="store_true", help="Reads are paired end")
+
   parser.add_argument("--nocompatible", action="store_true", help="Do not require reads compatible with transcript splice junctions")
   parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check")
 
@@ -65,14 +67,14 @@ def get_tis(gp):
 def run(args):
   '''Main function for differential TIS
   '''
-  global pth, qth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible, compatiblemis
+  global pth, qth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible, compatiblemis, paired
   pth, qth = args.pth, args.qth
   tis1bampaths = args.tis1bampaths
   tis2bampaths = args.tis2bampaths
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   compatible = not args.nocompatible
   compatiblemis = args.compatiblemis
-
+  paired = args.paired
   if len(tis1bampaths) == 0 or len(tis2bampaths) == 0 :
     print('Missing bam file input!')
     exit(1)
@@ -80,7 +82,7 @@ def run(args):
   tis2offdict = find_offset(args.tis2bampaths, args.tis2para)
   tis1file = open(args.tis1path, 'r')
   tis2file = open(args.tis2path, 'r')
-  compatible = not args.nocompatible
+  #compatible = not args.nocompatible
   if args.verbose : print("Loading data...")
   trans = {}
   gname = {}
@@ -261,11 +263,11 @@ def _get_tis(ps) :
   t, g1t, g2t = ps
   r1, r2 = [], []
   if g1t is not None :
-    t1tis = ribo.multiRibo(t, tis1bampaths, offdict = tis1offdict, compatible = compatible, mis = compatiblemis)
+    t1tis = ribo.multiRibo(t, tis1bampaths, offdict = tis1offdict, compatible = compatible, mis = compatiblemis, paired = paired)
     #ttis = ribo.Ribo(merge, tisbam1file, offdict = tis1offdict, compatible = False)
     for i in g1t : r1.append((i, t1tis.cnts[i]))
   if g2t is not None :
-    t2tis = ribo.multiRibo(t, tis2bampaths, offdict = tis2offdict, compatible = compatible, mis = compatiblemis)
+    t2tis = ribo.multiRibo(t, tis2bampaths, offdict = tis2offdict, compatible = compatible, mis = compatiblemis, paired = paired)
     for i in g2t : r2.append((i, t2tis.cnts[i]))
   return t.id, r1, r2
 

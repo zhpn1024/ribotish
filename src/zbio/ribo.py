@@ -3,7 +3,7 @@ Main library for riboseq analysis in zbio/ribotish
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 import itertools, math
-from zbio import stat, bam, gtf, exp, orf, tools, io, fa, interval
+import stat, bam, gtf, exp, orf, tools, io, fa, interval
 from multiprocessing import Pool
 
 codonSize = 3
@@ -336,6 +336,13 @@ class Ribo:
       if self.cnts[i] > 0 : cdstr += '{}:{}, '.format(i, self.cnts[i]) #cd[i] = self.cnts[i] 
     cdstr = cdstr.rstrip(', ') + '}'
     return cdstr
+  def dict2cnts(self, d):
+    '''load dict data into cnts
+    '''
+    for i in d :
+      #if i < nhead : continue
+      #if i > len(self.cnts) - ntail : continue
+      self.cnts[i] = d[i]
   def top_summits_iter(self, start = None, stop = None, minratio = 0, flank = 3, is_zt = False, pth = 0.05, harr = False): 
     '''generate all possible sites, do not specify total number or test with r, p, not used in final version
     '''
@@ -464,7 +471,7 @@ def estimate_tis_bg_all(gtfpath, bampath, genomefapath, parts = [0.25, 0.5, 0.75
     pool.close()
   return paras, slp, data
 
-def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2): 
+def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2, paired = False): 
   '''Load multiple ribobam files to one object
   '''
   if type(bampaths) == list : 
@@ -475,9 +482,9 @@ def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2):
     offdict = [offdict]
   mribo = Ribo(trans) # Empty object
   for i in range(len(bamfiles)) :
-    mribo.merge(Ribo(trans, bamfiles[i], offdict = offdict[i], compatible = compatible, mis = mis))
+    mribo.merge(Ribo(trans, bamfiles[i], offdict = offdict[i], compatible = compatible, mis = mis, paired = paired))
   return mribo
-def multiRiboGene(gene, bampaths, offdict = None, compatible = True, mis = 2): 
+def multiRiboGene(gene, bampaths, offdict = None, compatible = True, mis = 2, paired = False): 
   '''Load multiple ribobam files to one object
   '''
   regions = interval.allTransRegions(gene.trans)
@@ -487,7 +494,7 @@ def multiRiboGene(gene, bampaths, offdict = None, compatible = True, mis = 2):
     offunc = lambda r : r.genome_pos(offset(r, offdict[i]))
     #def offunc(r):
       #return offset(r, offdict[i])
-    mbl.merge(bam.BamLoadChr(bampaths[i], chr = gene.chr, region = regions[gene.chr], strand = gene.strand, posFunc = offunc, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary))
+    mbl.merge(bam.BamLoadChr(bampaths[i], chr = gene.chr, region = regions[gene.chr], strand = gene.strand, posFunc = offunc, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired))
   return mbl
 
   if type(bampaths) == list : 
@@ -599,7 +606,7 @@ def _cdsCounts(args): # updated for bampath list
   For estimateTISbg()
   '''
   t, args2 = args
-  bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis = args2
+  bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis, paired = args2
   tl = t.cdna_length()
   if tl < minTransLen : return None
   cds1 = t.cds_start(cdna = True)
@@ -609,7 +616,7 @@ def _cdsCounts(args): # updated for bampath list
   if cds2 < cds1 or (cds2 - cds1) % 3 > 0 : 
     print('Wrong CDS: {} {} {}'.format(t.id, cds1, cds2))
     return None
-  tis = multiRibo(t, bampaths, offdict = offdict, compatible = False) # not compatible
+  tis = multiRibo(t, bampaths, offdict = offdict, compatible = False, paired = paired) # not compatible
   score = tis.abdscore()
   genome = fa.Fa(genomefapath)
   tsq = genome.transSeq(t) #tools.trans2seq(genome, t)
@@ -620,7 +627,7 @@ def _cdsCounts(args): # updated for bampath list
     tdata.record(tis.cnts[i])
   return t, score, tis.total, tdata #tis.cnts[cds1:cds2-3:3] #, mcds2
 
-def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], offdict = None, skip_tis = True, alt_tis = True, addchr = False, numProc = 1, verbose = False, harrwidth = None, geneformat = 'auto'):
+def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], offdict = None, skip_tis = True, alt_tis = True, addchr = False, numProc = 1, verbose = False, harrwidth = None, geneformat = 'auto', paired = False):
   '''estimate TIS background using only ORF inframe reads, corrent version
   '''
   parts.sort()
@@ -631,7 +638,7 @@ def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], o
   data = [exp.ReadDict() for i in range(l)]
   
   trans_iter = io.transSelectIter(genepath, fileType = geneformat, chrs = genome.idx, verbose = verbose)
-  args2 = bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis
+  args2 = bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis, paired
   para_iter = itertools.izip(trans_iter, itertools.repeat(args2)) # , itertools.repeat(offdict))
   if numProc <= 1 : merge_iter = itertools.imap(_cdsCounts, para_iter)
   else : 
@@ -906,14 +913,14 @@ def _lendis_gene(args):
 def _lendis_trans(args):
   '''quality profile in each transcript
   '''
-  t, bampath, lens, dis, ccds, minR, m0, cdsBins = args
+  t, bampath, lens, dis, ccds, minR, m0, cdsBins, paired = args
   bamfile = bam.Bamfile(bampath, "rb")
   tl = t.cdna_length()
   cds1, cds2 = t.cds_start(cdna = True), t.cds_stop(cdna = True) - codonSize
   td = lenDis(lens, dis, tl, cds1, cds2)
   if m0: tdm = lenDis(lens, dis, tl, cds1, cds2)
   tr = 0 # Total reads
-  for r in bam.transReadsIter(bamfile, t, compatible = False, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary):
+  for r in bam.transReadsIter(bamfile, t, compatible = False, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired):
     if m0 : ism0 = r.is_m0()
     l = r.fragment_length()
     if l < lens[0] or l >= lens[1]: continue # not in given length range
@@ -935,7 +942,7 @@ def _lendis_trans(args):
     tdm.cnts = {}
     result += [tdm]
   return result
-def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR = 1, m0 = True, cdsBins = 20, numProc = 1, addchr = False, verbose = False, geneformat = 'auto'):
+def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR = 1, m0 = True, cdsBins = 20, numProc = 1, addchr = False, verbose = False, geneformat = 'auto', paired = False):
   '''distributions of different reads length, for quality control
   '''
   #gtffile = open(gtfpath,'r')
@@ -945,7 +952,7 @@ def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR
   #gene_iter = gtf.gtfgene_iter(gtffile, addchr = addchr, verbose = verbose)
   trans_iter = io.transSelectIter(genepath, fileType = geneformat, verbose = verbose)
   rep = itertools.repeat
-  para_iter = itertools.izip(trans_iter, rep(bampath), rep(lens), rep(dis), rep(ccds), rep(minR), rep(m0), rep(cdsBins))
+  para_iter = itertools.izip(trans_iter, rep(bampath), rep(lens), rep(dis), rep(ccds), rep(minR), rep(m0), rep(cdsBins), rep(paired))
   if numProc <= 1 : len_iter = itertools.imap(_lendis_trans, para_iter) #_lendis_gene
   else : 
     pool = Pool(processes = numProc - 1)
