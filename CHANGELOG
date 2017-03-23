@@ -1,0 +1,11 @@
+2017-3-22 ribotish 0.1.6
+
+	Add --inprofile option in predict. Ribotish can load transcript RPF profile from txt file generated from --transprofile option instead of bam files.
+
+	Add --seq and --aaseq options to report ORF and peptide sequences.
+
+	Change -a option, mainly for protein coding annotation if annotation for prediction mainly focus on non-coding RNAs.
+
+	Move zbio library into ribotish folder.
+
+

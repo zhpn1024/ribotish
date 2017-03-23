@@ -366,7 +366,7 @@ def _pred_gene(ps): ### trans
         tispf, ribopf = pf[t.id]
         ttis = ribo.Ribo(t)
         tribo = ribo.Ribo(t)
-        ttis.dict2cnts(tispf)
+        if has_tis : ttis.dict2cnts(tispf)
         tribo.dict2cnts(ribopf)
       else : 
         print('Warning: transcript {} {} {} not in input trans profile! '.format(t.gid, t.id, t.symbol))
@@ -379,15 +379,16 @@ def _pred_gene(ps): ### trans
     score = ttis.abdscore()
     ip = ribo.pidx(score, slp) 
   
-    if has_tis and tis2ribo : tribo.merge(ttis) ##
     if verbose >= 2 : print g.id, t.id, ttis.total, tribo.total
     cds1 = t.cds_start(cdna = True) 
     cds2 = t.cds_stop(cdna = True) 
     tsq = genome.transSeq(t)
-    #tpfs = {}
     if transprofile is not None:
       tid = '{}\t{}\t{}'.format(t.gid, t.id, t.symbol)
       tpfs[tid] = '{}\t{}'.format(ttis.cnts_dict_str(), tribo.cnts_dict_str())
+
+    if has_tis and tis2ribo : tribo.merge(ttis) ##
+
   # user provided candidates
     if candidates is not None : 
       if t.id not in candidates : continue
