@@ -100,13 +100,13 @@ class Orf:
     th = minaalen * 3
     rm = False
     for i, s in enumerate(self.starts):
-      if self.stop - s < th : 
+      if end - s < th : 
         rm = True
         break
     if rm : self.starts[i:] = []
     rm = False
     for i, s in enumerate(self.altstarts):
-      if self.stop - s < th : 
+      if end - s < th : 
         rm = True
         break
     if rm : self.altstarts[i:] = []

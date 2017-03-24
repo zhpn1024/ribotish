@@ -531,7 +531,7 @@ class BamLoadChr:
     bamfile = Bamfile(bampath)
     if chr not in bamfile.references : 
       chr = changechr(chr)
-      if chr not in self.references : 
+      if chr not in bamfile.references : 
         print("chr {} not found in Bamfile!".format(self.chr))
         return
     if region is None : region = [[None, None]]

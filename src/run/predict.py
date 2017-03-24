@@ -5,7 +5,7 @@ from os.path import isfile
 def help():
   return "Predict ORFs from riboseq data"
 def set_parser(parser):
-  #### basic input options ####
+  #### basic options ####
   parser.add_argument("-t", type=strlist, dest="tisbampaths", default=[], help="TIS enriched riboseq bam files, comma seperated")
   parser.add_argument("-b", type=strlist, dest="ribobampaths", default=[], help="Ordinary riboseq bam files, comma seperated")
   parser.add_argument("-g", type=str, dest="genepath", required=True, help='Gene annotation file for ORF prediction')
@@ -22,42 +22,37 @@ def set_parser(parser):
   parser.add_argument("-s", type=str, dest="inestpath", help="Input background estimation result file instead of instant estimation")
   parser.add_argument("--transprofile", type=str, help="Output RPF P-site profile for each transcript")
   parser.add_argument("--inprofile", type=str, help="Input RPF P-site profile for each transcript, instead of reading bam reads, save time for re-running")
-
+  # predict options
   parser.add_argument("--alt", action="store_true", help="Use alternative start codons (all codons with 1 base different from ATG)")
   parser.add_argument("--altcodons", type=strlist, help="Use provided alternative start codons, comma seperated, eg. CTG,GTG,ACG")
-  #parser.add_argument("--addchr", action="store_true", help="Auto add 'chr' for input gene annotation file")
   parser.add_argument("--tis2ribo", action="store_true", help="Add TIS bam counts to ribo, if specified or -b not provided")
   parser.add_argument("--harr", action="store_true", help="The data is treated with harringtonine (instead of LTM)")
   parser.add_argument("--harrwidth", type=int, default=15, help="Flanking region for harr data, in codons (default: 15)")
   parser.add_argument("--enrichtest", action="store_true", help="Use enrich test instead of frame test")
-  
-  #parser.add_argument("--maxtisnum", type=int, default=10, help="max number of TIS sites for one transcript")
+  # output options
   parser.add_argument("--minaalen", type=int, default=6, help="Min amino acid length of candidate ORF (default: 6)")
   parser.add_argument("--genefilter", type=strlist, help="Only process given genes")
   parser.add_argument("--tpth", type=float, default=0.05, help="TIS p value threshold (default: 0.05)")
   parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
   parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
+  parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
+  parser.add_argument("--fsqth", type=float, default=1, help="Fisher's FDR q value threshold")
   parser.add_argument("--framelocalbest", action="store_true", help="Only report local best frame test results")
   parser.add_argument("--framebest", action="store_true", help="Only report best frame test results")
   parser.add_argument("--longest", action="store_true", help="Only report longest possible ORF results")
+  parser.add_argument("--seq", action="store_true", help="Report ORF sequences")
+  parser.add_argument("--aaseq", action="store_true", help="Report amino acid sequences")
   # Reads filters
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
   parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
   parser.add_argument("--paired", action="store_true", help="Reads are paired end")
   parser.add_argument("--nocompatible", action="store_true", help="Do not require reads compatible with transcript splice junctions")
-  parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check")
-  #parser.add_argument("--epth", type=float, default=1, help="Enrichment p value threshold")
-  parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
-  parser.add_argument("--fsqth", type=float, default=1, help="Fisher's FDR q value threshold")
+  parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check (default: 2)")
+  # running options
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
-  parser.add_argument("--seq", action="store_true", help="Report ORF sequences")
-  parser.add_argument("--aaseq", action="store_true", help="Report amino acid sequences")
 
-  #parser.add_argument("--showtime", action="store_true", help="showtime")
-
-  
 def strlist(s):
   '''Convert comma seperated file name string to list
   '''
@@ -72,7 +67,6 @@ def run(args):
   global tpth, fpth, minpth, fspth, framebest, framelocalbest, longest, transprofile, TIS_types #fspth
   global paired, seq, aaseq # showtime
   paired, seq, aaseq = args.paired, args.seq, args.aaseq
-  #showtime = args.showtime
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   tisbampaths = args.tisbampaths
   ribobampaths = args.ribobampaths
@@ -115,7 +109,6 @@ def run(args):
       if isfile(path) : args.inestpath = path
       else : args.estpath = path
   if args.agenepath is None : args.agenepath = args.genepath
-  #start = time.time()
 
   # load genome, fasta file indexing
   if args.verbose : print("{} Loading genome...".format(time.ctime()))
@@ -198,15 +191,13 @@ def run(args):
       except : continue
       if gid not in inprofile : inprofile[gid] = {}
       inprofile[gid][tid] = tispf, ribopf
+
   print("{} Predicting...".format(time.ctime()))
   profile = exp.Profile()
-  #if enrichtest : title = ['TISGroup', 'TISCounts', 'TISPvalue', 'EnrichPvalue', 'EnrichPStatus']
   title = ['TISGroup', 'TISCounts', 'TISPvalue', 'RiboPvalue', 'RiboPStatus']
   j = [0,0] # total number of ORF/TIS for BH correction
-  #agenefile = open(args.agenepath,'r')
   gene_iter = io.geneIter(args.genepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
   para_iter = genePara(gene_iter, inorf, inprofile)
-  #para_iter = itertools.izip(gene_iter, itertools.repeat(paras), itertools.repeat(slp))
   if args.numProc <= 1 : pred_iter = itertools.imap(_pred_gene, para_iter)
   else : 
     #from multiprocessing import Pool
@@ -215,9 +206,7 @@ def run(args):
   if transprofile is not None : 
     tpfile = open(transprofile, 'w')
     tpfile.write('Gid\tTid\tSymbol\tTISProf\tRiboProf\n')
-  #global cds_regions
-  #cds_regions = {}
-  #known_tis = {}
+
   for result in pred_iter:
     es, ji, tpfs, g = result
     j[0] += ji[0]
@@ -237,17 +226,12 @@ def run(args):
     for t in g.trans : 
       tis = t.cds_start(cdna = False)
       if tis is not None : known_tis[g.chr][g.strand][tis] = 1
+
   for chr in cds_regions :
     for strand in cds_regions[chr] :
       for i in range(3) :
         cds_regions[chr][strand][i].check()
   print("{} Checking overlap with known CDS..".format(time.ctime()))
-  #if args.numProc <= 1 : check_iter = itertools.imap(check_known, para_iter)
-  #else : 
-    #from multiprocessing import Pool
-    #pool = Pool(processes = args.numProc - 1)
-    #pred_iter = pool.imap_unordered(_pred_gene, para_iter, chunksize = 5)
-  #start = time.time()
   for e in profile : 
     if e.tistype == 0 : continue
     elif e.gtis in known_tis[e.chr][e.strand] : e.id += ':Known'
@@ -259,14 +243,14 @@ def run(args):
           #coding_overlap = True
           e.id += ':CDSFrameOverlap'
           break
-  #end = time.time()
-  #print('Checking time used: %s' % str(end - start))
+
   print("{} BH correcting...".format(time.ctime()))
   profile.BHcorrection(2, total = j[1], append = True) # Calculate BH FDR of TIS p value
   profile.BHcorrection(3, total = j[0], append = True) # Frame p value
   i = 1
   if len(tisbampaths) == 0 : i = 0
   profile.BHcorrection(5, total = j[i], append = True) # Calculate BH FDR for Fisher's p value
+
   outfile = open(args.output,'w')
   s = "Gid\tTid\tSymbol\tGeneType\tGenomePos\tStartCodon\tStart\tStop\tTisType\t"
   s += '\t'.join(title)
@@ -277,7 +261,6 @@ def run(args):
   outfile.write(s)
 
   for e in profile:
-    #e.data.append(e.q)
     if e.q > args.fsqth : continue
     s = "%s\t%d" % (e, e.length)
     if seq : s += '\t' + e.sq
@@ -285,9 +268,6 @@ def run(args):
     s += '\n'
     outfile.write(s) # "%s\t%d\n" % (e, e.length)) #, e.sq))
   
-  #end = time.time()
-  #print('Time used: %s' % str(end - start))
-
 def check_overlap(e, known_tis, cds_regions) : 
   if e.tistype == 0 : return ''
   elif e.gtis in known_tis : return ':Known'
@@ -309,16 +289,13 @@ def genePara(gene_iter, inorf, inprofile):
       #if len(cand) > 0 : 
       yield g, cand, pf
   else :
-    #i = 0
     for g in gene_iter: 
       if gfilter is not None :
         if g.id not in gfilter : continue # or t.gid not in gfilter : continue
       pf = {}
       if inprofile is not None and g.id in inprofile : pf = inprofile[g.id]
       yield g, None, pf
-      #i += 1
-      #if i >= 10 : break
-#offdict = None
+
 def find_offset(bampaths, para):
   '''Get offset data for given bam data
   '''
@@ -335,17 +312,15 @@ def find_offset(bampaths, para):
       print('No offset parameter file found for %s. Using default offset (12). ' %  bampaths[i])
   return offlist
     
-
-
 def _pred_gene(ps): ### trans
   '''Main function of ORF prediction in given transcript
   '''
-  #if showtime : timestart = time.time()
   g, candidates, pf = ps
   es, j = [], [0,0]
   tpfs = {} #trans profiles
   genome = fa.Fa(genomefapath)
   has_tis = len(tisbampaths) > 0
+
   load = True
   if candidates is not None :
     if len(candidates) == 0 :  return es, j, tpfs, g
@@ -354,7 +329,7 @@ def _pred_gene(ps): ### trans
   if load :
     tismbl = ribo.multiRiboGene(g, tisbampaths, offdict = tisoffdict, compatible = compatible, mis = compatiblemis, paired = paired)
     ribombl = ribo.multiRiboGene(g, ribobampaths, offdict = riboffdict, compatible = compatible, mis = compatiblemis, paired = paired)
-  #tpfs = {} #trans profiles
+
   for t in g.trans:
     #if candidates is not None and t.id not in candidates : continue
     tl = t.cdna_length()
@@ -374,15 +349,14 @@ def _pred_gene(ps): ### trans
     else :
       ttis = ribo.Ribo(t, bamload = tismbl, compatible = compatible, mis = compatiblemis)
       tribo = ribo.Ribo(t, bamload = ribombl, compatible = compatible, mis = compatiblemis)
-    #print t.symbol, t.gid, t.id, tribo.total, ribombl.data
-    #if showtime : time1 = time.time()
+
     score = ttis.abdscore()
-    ip = ribo.pidx(score, slp) 
-  
+    ip = ribo.pidx(score, slp)   
     if verbose >= 2 : print g.id, t.id, ttis.total, tribo.total
     cds1 = t.cds_start(cdna = True) 
     cds2 = t.cds_stop(cdna = True) 
     tsq = genome.transSeq(t)
+
     if transprofile is not None:
       tid = '{}\t{}\t{}'.format(t.gid, t.id, t.symbol)
       tpfs[tid] = '{}\t{}'.format(ttis.cnts_dict_str(), tribo.cnts_dict_str())
@@ -409,10 +383,7 @@ def _pred_gene(ps): ### trans
         has_stop = tsq[stop-3:stop] in orf.cstop
         e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N', fsp], has_stop)
         es.append(e)
-    #if showtime : 
-      #end = time.time()
-      #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
-    #return es, j
+
     else : #all possible ORFs
       orfs = orf.orflist(tsq, minaalen = minaalen, tail = tl)
       for o in orfs :
@@ -449,7 +420,6 @@ def _pred_gene(ps): ### trans
               if framebest and rst[i][0] != 'T' : continue
           fsp, fss = stat.fisher_method([tps[i], rps[i]]) #
           if fsp > fspth : continue
-          #has_stop = o.stop > 0
           e = getResult(t, tis, o.stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tps[i], rps[i], rst[i], fsp], o.has_stop_codon)
           #tistype = tisType(tis, o.stop, cds1, cds2)
           #orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
@@ -465,9 +435,7 @@ def _pred_gene(ps): ### trans
         #if has_tis : 
         j[1] += ol
         j[0] += 1
-  #if showtime : 
-      #end = time.time()
-      #print('%s\t%s\tTime_used:\t%s\t%s' % (t.symbol, t.id, str(time1 - timestart), str(end - time1)))
+
   return es, j, tpfs, g
 
 def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
@@ -477,7 +445,6 @@ def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   if t.strand != '-' : genomestr = '{}:{}-{}:{}'.format(t.chr, gtis, gstop, t.strand)
   else : genomestr = '{}:{}-{}:{}'.format(t.chr, gstop, gtis, t.strand)
   tid = "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, genomestr, orfstr, TIS_types[tistype])
-  #values = [ip, ttis.cnts[tis], tp, rp, 'N']
   e = exp.Exp(tid, values)
   e.length = (stop - tis) / 3 - 1
   if not has_stop : e.length += 1
@@ -508,7 +475,6 @@ def pvalStatus(ps) :
   last, c = 1, 1
   better = True
   for i, p in enumerate(cp): 
-    #print (p,m)
     if p == m : st[i] = top
     elif p < last : 
       c = 1
@@ -523,6 +489,7 @@ def pvalStatus(ps) :
       c = 1
     last = p
   return st
+
 def tisType(start, stop, cds1, cds2):
   '''Type of the TIS relatve to annotated ORF
   '''
