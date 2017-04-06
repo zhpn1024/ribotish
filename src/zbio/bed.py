@@ -27,7 +27,8 @@ class Bed3:
         elif i == 9 : lst.append(1)
         elif i == 10 : lst.append((lst[2]-lst[1],))
         elif i == 11 : lst.append((0,))
-        else : lst.append('.')
+        elif i in (3,4,5) : lst.append('.')
+        else : raise ValueError
     self.items = tuple(lst)
     self.symbol = self.gid = self.tid = self.id ###
     self.genetype = ''

@@ -257,7 +257,7 @@ def cds_region_trans(t, cds1 = None, cds2 = None):
   if (cds2 - cds1) % 3 > 0 : 
     print('Wrong CDS : %s %s %d %d %d' % (t.gid, t.id, cds1, cds2, t.cdna_length()))
     wrong = True
-    #return cr ## Wrong CDS annotation
+    return cr ## Wrong CDS annotation
   thick = [t.genome_pos(cds1, 1), t.genome_pos(cds2, 0)]
   thick.sort()
   ts1, ts2 = thick #t.thick_start, t.thick_stop
