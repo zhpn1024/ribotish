@@ -1124,5 +1124,5 @@ def formatdict(d, tab=1):
   for k in ks:
     if type(d[k]) == dict : s += '{}: {}, '.format(repr(k), formatdict(d[k], tab+1))
     else : s += '{}: {}, '.format(repr(k), repr(d[k]))
-  s = s[:-2] + '}'
+  s = s.strip(', ') + '}'
   return s

@@ -23,7 +23,7 @@ class Bed3:
       try: lst.append(self.Format[i](l[i]))
       except: 
         if i in (6, 7) : lst.append(lst[1]) # blockstart/stop
-        elif i in (8,) : lst.append(0) # rgb
+        elif i in (8,) : lst.append('0') # rgb
         elif i == 9 : lst.append(1)
         elif i == 10 : lst.append((lst[2]-lst[1],))
         elif i == 11 : lst.append((0,))
