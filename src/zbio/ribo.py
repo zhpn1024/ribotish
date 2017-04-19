@@ -962,7 +962,7 @@ def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR
     if result is None : continue
     ad.merge(result[0])
     if m0 : adm.merge(result[1])
-  pool.close()
+  if numProc > 1 : pool.close()
   results = [ad]
   if m0 : results += [adm]
   return results

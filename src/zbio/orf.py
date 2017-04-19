@@ -206,7 +206,11 @@ codonTable = {'TTT':'F','TTC':'F','TTA':'L','TTG':'L', 'TCT':'S','TCC':'S','TCA'
                'ATT':'I','ATC':'I','ATA':'I','ATG':'M', 'ACT':'T','ACC':'T','ACA':'T','ACG':'T', 'AAT':'N','AAC':'N','AAA':'K','AAG':'K', 'AGT':'S','AGC':'S','AGA':'R','AGG':'R', 
                'GTT':'V','GTC':'V','GTA':'V','GTG':'V', 'GCT':'A','GCC':'A','GCA':'A','GCG':'A', 'GAT':'D','GAC':'D','GAA':'E','GAG':'E', 'GGT':'G','GGC':'G','GGA':'G','GGG':'G', 
               }
-
+AACodon = {'F':['TTC','TTT'], 'L':['CTG','CTC','CTT','TTG','TTA','CTA'], 'M':['ATG'], 'I':['ATC','ATT','ATA'], 'V':['GTG','GTC','GTT','GTA'],
+           'S':['AGC','TCC','TCT','TCA','AGT','TCG'], 'P':['CCC','CCT','CCA','CCG'], 'T':['ACC','ACA','ACT','ACG'], 'A':['GCC','GCT','GCA','GCG'],
+           'Y':['TAC','TAT'], '*':['TAA','TAG','TGA'], 'H':['CAC','CAT'], 'Q':['CAG','CAA'], 'N':['AAC','AAT'], 'K':['AAG','AAA'], 'D':['GAC','GAT'], 'E':['GAG','GAA'],
+           'C':['TGC','TGT'], 'W':['TGG'], 'R':['AGA','AGG','CGG','CGC','CGA','CGT'], 'G':['GGC','GGA','GGG','GGT']
+           } # ordered by human codon usage
 def translate(seq):
   aa = ""
   for i in range(0, len(seq), codonSize):
@@ -214,6 +218,71 @@ def translate(seq):
     except : a = 'X'
     aa += a
   return aa
+
+def senseMut(seq, mutkey, cds1 = 0, cds2 = None) : # pass
+  if cds2 is None : cds2 = len(seq)
+  if type(mutkey) == str : keys = [mutkey]
+  else : keys = mutkey
+  seq = seq.upper()
+  change = {}
+  has_key = True
+  while has_key :
+    has_key = False
+    for key in keys : 
+      p = seq.find(key)
+      while p >= 0 : 
+        has_key = True
+        if p not in change : change[p] = 0
+        mut = sense_mut1(seq, p, p+len(key), cds1, cds2, change[p])
+        change[p] += 1
+        if mut is None : 
+          print('Cannot find sense mutation for {} at {} of {}!'.format(key, p, seq))
+          return None
+        newseq, i, c = mut
+        print('{} {} changed to {}, {}'.format(i, seq[i:i+len(c)], c, newseq))
+        seq = newseq #, i, c = mut
+        p = seq.find(key)
+  return seq
+
+bases = ['T', 'C', 'A', 'G']
+def sense_mut1(seq, start, stop, cds1, cds2, n = 0) : # mutate any one base in a region. n is time of retries.
+  #incds = True
+  if start >= cds2 or stop <= cds1 : # incds = False
+    return base_mut(seq, start, stop, n)
+  else : 
+    n1 = (cds1 - start) * 4
+    if n1 < 0 : n1 = 0
+    if n < n1 : return base_mut(seq, start, cds1, n) # upstream mutation
+    n2 = (stop - cds2) * 4
+    if n2 < 0 : n2 = 0
+    if n < n1 + n2 : return base_mut(seq, cds2, stop, n-n1) # downstream mutation
+    return codon_mut(seq, start, stop, cds1, cds2, n-n1-n2) # codon mutation
+########
+def base_mut(seq, start, stop, n = 0) : 
+  if n >= (stop - start) * 4 : return None # exceed limit
+  i = int((start + stop) / 2)
+  shift = n / 4 # 4 bases
+  if shift % 2 > 0 : i -= int(shift / 2) + 1
+  else : i += int(shift / 2)
+  bi = n % 4
+  newseq = seq[0:i] + bases[bi] + seq[i+1:]
+  return newseq, i, bases[bi]
+
+def codon_mut(seq, start, stop, cds1, cds2, n = 0) : # pass
+  ni, ns = n, 0
+  for i in range(cds1, cds2, 3) : 
+    if i + 3 <= start : continue
+    if i >= stop : return None
+    codon = seq[i:i+3]
+    aa = codonTable[codon]
+    aac = AACodon[aa]
+    if ni >= len(aac) : 
+      ni -= len(aac)
+      continue
+    c2 = aac[ni]
+    #for j in range(max(start-i,0), min(i+3-stop,3)) : 
+    newseq = seq[0:i] + c2 + seq[i+3:]
+    return newseq, i, c2
 
 def is_start(seq, pos, alt = False, flank = 0):
   '''if start / alt start codon is nearby
@@ -226,3 +295,5 @@ def is_start(seq, pos, alt = False, flank = 0):
   return False
 def is_startlike(seq, pos, flank = 0):
   return is_start(seq, pos, alt = True, flank = flank)
+
+

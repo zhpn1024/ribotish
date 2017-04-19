@@ -55,7 +55,7 @@ title = ['TIS1count', 'TIS1sig', 'TIS2count', 'TIS2sig']
 def sig(data):
   '''if data fit thresholds
   '''
-  return data[1] < pth and data[2] < qth
+  return data[1] < ipth and data[2] < iqth
 def get_tis(gp):
   '''get TIS genome position
   '''
@@ -67,8 +67,8 @@ def get_tis(gp):
 def run(args):
   '''Main function for differential TIS
   '''
-  global pth, qth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible, compatiblemis, paired
-  pth, qth = args.pth, args.qth
+  global ipth, iqth, tis1bampaths, tis2bampaths, tis1offdict, tis2offdict, compatible, compatiblemis, paired
+  ipth, iqth = args.ipth, args.iqth
   tis1bampaths = args.tis1bampaths
   tis2bampaths = args.tis2bampaths
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
