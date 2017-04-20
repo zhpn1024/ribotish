@@ -43,7 +43,7 @@ If you do not want pip to fix dependencies, type::
 Install from source
 ===================
 
-To install a source distribution, unpack the distribution tarball, go to the directory and simply run the install script::
+To install a source distribution, download source from PyPI_ or GitHub_. The latest updates usually appear on GitHub first. Go to the directory and simply run the install script::
 
  $ python setup.py install
 
@@ -57,6 +57,8 @@ or::
 
  $ python setup.py install --user
 
+.. _PyPI: https://pypi.python.org/pypi/ribotish
+.. _GitHub: https://github.com/zhpn1024/ribotish
 
 Configure enviroment variables
 ==============================
