@@ -32,8 +32,8 @@ class Exp(): #values for one gene/trans/probe
   def headerline(self, showanno = False, sep='\t'):# Header string
     sep=str(sep)
     s = 'id' + sep
-    if showanno : s += 'anno' + sep
-    s += sep.join(map(str, self.sample))
+    if showanno : s += 'anno' # + sep
+    #s += sep.join(map(str, self.sample))
     return s
   
 class Gene:
@@ -117,13 +117,15 @@ class Profile():
   def __iter__(self):
     for eid in self.ids:
       yield self.exps[eid]
+  def __getitem__(self, i):
+    return self.exps[self.ids[i]]
   def BHcorrection(self, pid = -1, total = -1, append = False):
     lst = list(self.exps.values())
     n = len(lst)
     if total < 0: total = n
     for e in lst:
-      if len(e.value) < 1: e.value.append(1)
-      e.value[0] = e.data[pid]
+      #if len(e.value) < 1: e.value.append(1)
+      e.value = [e.data[pid]]
     lst.sort()
     qc = 1
     for i in range(n-1, -1, -1):
@@ -139,26 +141,35 @@ class Profile():
     for eid in self.ids:
       outfile.write(self.exps[eid].string(showanno, sep) + '\n')
       #showanno = False
-  def TMM(self, i1 = 0, i2 = 1, mtrim = 0.3, atrim = 0.05): # The Trimmed Mean of M-values by edgeR, return log2 scale factor
-    exps = list(self.exps.values())
-    n = len(exps)
-    nmt = int(mtrim * n) + 1 # m trim 0.3
-    nat = int(atrim * n) + 1 # a trim 0.1
+  def TMM(self, i1 = 0, i2 = 1, mtrim = 0.3, atrim = 0.1): # The Trimmed Mean of M-values by edgeR, return log2 scale factor
+    exps = [] # list(self.exps.values())
+    #n = len(exps)
+    #nmt = int(mtrim * n) + 1 # m trim 0.3
+    #nat = int(atrim * n) + 1 # a trim 0.1
     N1, N2 = 0, 0
     #s = 0
-    for e in exps:
+    for eid in self.exps:
+      e = self.exps[eid]
+      N1 += e.data[i1]
+      N2 += e.data[i2]
+      if e.data[i1] <= 0 or e.data[i2] <= 0 : continue
       e.M = math.log(1.0 * e.data[i1] / e.data[i2], 2)
       e.A = 0.5 * math.log(e.data[i1] * e.data[i2], 2)
       #e.V = 1.0 / e.data[i1] + 1.0 / e.data[i2]
       #s += e.M
-      N1 += e.data[i1]
-      N2 += e.data[i2]
+      #N1 += e.data[i1]
+      #N2 += e.data[i2]
       #e.data += [m, a, v]
+      exps.append(e)
       e.select = True
       e.value[0:1] = [e.M] ### sort1 = m
     #s /= len(exps)
     #print('mean of M: {}'.format(s))
     exps.sort()
+    n = len(exps)
+    nmt = int(mtrim * n) + 1 # m trim 0.3
+    nat = int(atrim * n) + 1 # a trim 0.05
+
     #print('median of M: {}'.format(exps[int(len(exps))/2].M))
     for i in range(nmt): exps[i].select = False
     for i in range(n-nmt, n) : exps[i].select = False

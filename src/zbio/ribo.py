@@ -47,7 +47,7 @@ def rstest(x, y, delta = 1e-4, show = False):
 class Ribo: 
   '''riboseq profile for a transcript
   '''
-  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, compatible = True, mis = 2, downsample = 1.0, seed = 1, saverid = False, paired = False):
+  def __init__(self, trans, ribobam = None, bamload = None, offset = offset, offdict = None, compatible = True, mis = 2, downsample = 1.0, seed = 1, saverid = False, paired = False):
     self.length = trans.cdna_length()
     self.nhead, self.ntail = nhead, ntail
     self.trans = trans
@@ -135,6 +135,7 @@ class Ribo:
       #print i
       if i % codonSize == frame : inarr.append(self.cnts[i])
       else : outarr.append(self.cnts[i])
+    #print(self.trans.id, len(inarr), len(outarr))
     if len(inarr) <= 0 or len(outarr) <= 0 : return None
     if max(inarr) == 0 : return 1 ## 
     if old : return rstest_mw(inarr, outarr)
@@ -214,6 +215,7 @@ class Ribo:
   def efpvalues(self, orf, blank, glm = False, show = False): # For multi_orf_test
     if orf.indr.rlen() < minRlen : r1 = orf.region
     else : r1 = orf.indr
+    #print(self.trans.id, r1)
     fp = self.frame_test_region(r1, orf.frame(), glm = glm)
     r2 = blank[codonSize]
     if r2.rlen() < minRlen or orf.indr.rlen() < minRlen : r2 = blank[orf.frame()]
@@ -914,6 +916,7 @@ def _lendis_trans(args):
   '''quality profile in each transcript
   '''
   t, bampath, lens, dis, ccds, minR, m0, cdsBins, paired = args
+  #print(t)
   bamfile = bam.Bamfile(bampath, "rb")
   tl = t.cdna_length()
   cds1, cds2 = t.cds_start(cdna = True), t.cds_stop(cdna = True) - codonSize
@@ -968,7 +971,7 @@ def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR
   return results
 
 
-def lendisM0(gtfpath, bampath, lens = [26,35], dis = [-40,20], maxNH = maxNH, minMapQ = minMapQ, minR = 1):
+def lendisM0(gtfpath, bampath, lens = [26,35], dis = [-40,20], minR = 1):
   '''old version, do not seperate mismatch at 0
   '''
   bamfile = bam.Bamfile(bampath, "rb")
@@ -1126,3 +1129,61 @@ def formatdict(d, tab=1):
     else : s += '{}: {}, '.format(repr(k), repr(d[k]))
   s = s.strip(', ') + '}'
   return s
+
+def TIStest_betaBinom(t1, t2, r1, r2, scale_t = 1, scale_r = 1, alt = 'two.tailed', prior = [1,1]):
+  ''' Differental TIS test using Beta-Binomial model.
+      t1 & t2 are TIS raw counts. r1 & r2 are RNASeq raw counts.
+      scale_t & scale_r are scale factors of 2/1
+  '''
+  st2 = scale_t ** 0.5
+  sr2 = scale_r ** 0.5
+  alpha = (prior[0] + r1 * sr2) / st2
+  beta = (prior[1] + r2 / sr2) * st2
+  bb = stat.betaBinom(alpha, beta)
+  #if alpha == beta == 0.0 : return 1
+  return bb.pvalue(t1+t2, t1, alt = alt)
+def TIStest_chi2(t1, t2, r1, r2, scale_t = 1, scale_r = 1, alt = 'two.tailed'):
+  ''' Differental TIS test using Chi square test
+      Parameters are same as TIStest_betaBinom
+  '''
+  st2, sr2 = scale_t ** 0.5, scale_r ** 0.5
+  nt1, nt2 = t1 * st2, t2 / st2
+  nr1, nr2 = r1 * sr2, r2 / sr2
+  total = nt1 + nt2 + nr1 + nr2
+  sum1 = nt1 + nr1 #, nt2 + nr2
+  sumt = nt1 + nt2 #, nr1 + nr2
+  p1, pt = sum1 / total, sumt / total
+  p2, pr = 1 - p1, 1 - pt #sumt / total, sum2 / total
+  obs = nt1, nt2, nr1, nr2
+  exp = total * p1 * pt, total * p2 * pt, total * p1 * pr, total * p2 * pr
+  chi2, pv = stat.chisquare(obs, exp)
+  if math.isnan(pv) : 
+    #print('nan for {} {} {} {}!'.format(t1, t2, r1, r2))
+    return 1.0
+  if alt == 'two.sided' : return pv
+  if obs[0] >= exp[0] and alt in ('g', 'greater'): return pv / 2
+  if obs[0] <= exp[0] and alt in ('l', 'less'): return pv / 2
+  return 1 - pv / 2
+def TIStest_FisherExact(t1, t2, r1, r2, scale_t = 1, scale_r = 1, alt = 'two.tailed') :
+  ''' Differental TIS test using Fisher's exact test of rounded normalized counts
+  '''
+  st2, sr2 = scale_t ** 0.5, scale_r ** 0.5
+  if t1 + t2 > r1 + r2 :
+    nt1, nt2 = int(round(t1 * st2 / sr2)), int(round(t2 / st2 * sr2))
+    nr1, nr2 = r1, r2
+  else :
+    nt1, nt2 = t1, t2
+    nr1, nr2 = int(round(r1 * sr2 / st2)), int(round(r2 / sr2 * st2))
+  total = nt1 + nt2 + nr1 + nr2
+  sum1, sum2 = nt1 + nr1, nt2 + nr2
+  sumt, sumr = nt1 + nt2, nr1 + nr2
+  #p1, pt = sum1 / total, sumt / total
+  #p2, pr = 1 - p1, 1 - pt 
+  #exp = total * p1 * pt
+  pv =  stat.hypergeo_test(total, sum1, sumt, nt1, alt)
+  return pv
+  #if alt == 'two.sided' : return pv
+  #if nt1 >= exp and alt in ('g', 'greater'): return pv
+  #if nt1 <= exp and alt in ('l', 'less'): return pv
+  #return 1 - pv / 2
+

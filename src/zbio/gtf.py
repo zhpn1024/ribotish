@@ -11,6 +11,15 @@ def rm_chr(chr):
   if chr[3:].isdigit() or chr in ('chrX','chrY'): chr = chr[3:]
   elif chr == 'chrM' : chr = 'MT'
   return chr
+def changechr(chr):
+  '''change between two chr versions
+  '''
+  if chr.isdigit() or chr in ('X','Y','M'): return 'chr' + chr
+  elif chr == 'MT' : return 'chrM'
+  elif chr == 'chrM' : return 'MT'
+  elif chr[0:3] == 'chr' : return chr[3:]
+  else : return chr
+
 class Exon:
   '''exon in gtf format, 0 based, similar as bed
   '''
@@ -43,10 +52,11 @@ class Exon:
     if self.gff : 
       p1 = s.find(key)
       if p1 < 0 : return ''
-      else : p1 += len(key)
+      else : p1 += len(key) #+ 1
       p2 = s.find(';', p1)
-      if s[p1] == '=' : return s[p1:p2]
-      elif s[p1] == ':' : return s[p1:p2].split(',')[0]
+      if p2 == -1 : p2 = None
+      if s[p1] == '=' : return s[p1+1:p2]
+      elif s[p1] == ':' : return s[p1+1:p2].split(',')[0]
       else : return ''
     p1 = s.find(key + ' ')
     if p1 < 0 : return ''
@@ -452,8 +462,8 @@ class gtfGene(Exon):
     #self.type = lst[1]
   def add_trans(self, tr):
     if tr.strand != self.strand :
-      print('Wrong trans strand: {} {} {} {}'.format(tr.gid, tr.tid, tr.strand, self.strand))
-      tr.strand = self.strand
+      print('Inconsistent trans strand: {} {} {} {}'.format(tr.gid, tr.tid, tr.strand, self.strand))
+      #tr.strand = self.strand
     self.trans.append(tr)
     #self.check()
   def __repr__(self):
@@ -595,7 +605,9 @@ def gtfgene_iter(fin, filt = [], gff = False, addchr = False, chrs = None, verbo
     if len(lst) < 2 : continue
     if lst[2] == 'region' : continue
     if lst[0] != chr:
-      if chrs is not None and lst[0] not in chrs : continue
+      if chrs is not None and lst[0] not in chrs and changechr(lst[0]) not in chrs: 
+        #print('{}\t{}\t{}'.format(lst[0], changechr(lst[0]), chrs))
+        continue
       if verbose : print(lst[0])
       for gid in gidlist:
         if gid in genes : 
@@ -677,7 +689,7 @@ def gtftrans_iter(fin, filt = [], gff = False, addchr = False, chrs = None, verb
     if len(lst) < 2 : continue
     if lst[2] == 'region' : continue
     if lst[0] != chr:
-      if chrs is not None and lst[0] not in chrs : continue
+      if chrs is not None and lst[0] not in chrs and changechr(lst[0]) not in chrs: continue
       if verbose : print(lst[0])
       for tid in tidlist:
         if tid in trans : 

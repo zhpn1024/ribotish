@@ -278,6 +278,7 @@ class Bed6(Bed3):
 
 def com2tup(s): #comma string to tuple
   if type(s)==tuple: return s
+  if type(s)==list: return tuple(s)
   return tuple(map(int,s.strip().strip(',').split(',')))
 def tup2com(t): #tuple to comma string
   if type(t)==str: return t
@@ -392,7 +393,13 @@ class Bed12(Bed6):
     if self.strand=="-": self._introns = a[::-1]
     else : self._introns = a
     return self._introns
-  
+
+  def abs2relative(self):
+    '''change absolute blockStart values to relative values
+    '''
+    blockstarts = [st - self.start for st in self.blockStarts]
+    return self(blockStarts = blockstarts)
+
   def cdna_pos(self, p, strict = False):
     '''if strict is True, the 3' end of exon will be considered as not in the transcript,
     if strict is False, 3' end of exon will be considered as start of the next exon, 
@@ -412,6 +419,7 @@ class Bed12(Bed6):
         else: pos+=p1-self.blockStarts[i]
         return pos
       else: pos+=self.blockSizes[i]
+      #print(pos)
     else: return None
 
   def genome_pos(self, p, bias=1):

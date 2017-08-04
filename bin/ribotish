@@ -6,7 +6,7 @@ This code is free software; you can redistribute it and/or modify it
 under the terms of the BSD License (see the file COPYING included with
 the distribution).
 @status: experimental
-@version: 0.1.6
+@version: 0.1.8
 @author:  Peng Zhang
 @contact: zhpn1024@163.com
 """
@@ -48,8 +48,8 @@ def prepare_argparser ():
   return argparser
 
 if __name__ == '__main__':
-    #try:
-    main()
-    #except KeyboardInterrupt:
-        #sys.stderr.write("User interrupted me! ;-) Bye!\n")
-        #sys.exit(0)
+    try:
+      main()
+    except KeyboardInterrupt:
+        sys.stderr.write("User interrupted me! ;-) Bye!\n")
+        sys.exit(0)

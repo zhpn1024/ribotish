@@ -5,9 +5,11 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 
 import math
 from scipy.stats import nbinom, chisquare, chisqprob
+from scipy.special import betaln
 logarr = [None] # log(N)
 logsumarr = [0] # log(N!)
-def logarr_ext(n, logarr = logarr, logsumarr = logsumarr): # prepare log values
+def logarr_ext(n) : #, logarr = logarr, logsumarr = logsumarr): # prepare log values
+  global logarr, logsumarr
   l = len(logarr)
   if l < n + 1 : 
     logarr += [None] * (n + 1 - l)
@@ -51,6 +53,7 @@ def fisher_method(ps):
 def combination_log(n, k, show = False): 
   '''N choose K, log combination number, NATURAL LOG
   '''
+  n, k = int(n), int(k)
   if n < 0 : return None
   if k > n or k < 0: return None #None is log(0)
   logarr_ext(n)
@@ -105,7 +108,23 @@ def hypergeo(N, K, n, k):
   if lp is None : return 0
   return math.exp(lp)
   
-def binomial(k, n, p = 0.5, show=False):
+def hypergeo_test(N, K, n, k, alt = 'two.tailed') :
+  p = hypergeo(N, K, n, k)
+  if alt in ('g', 'greater') :
+    for i in range(k, min(K, n)) :
+      p += hypergeo(N, K, n, i+1)
+      if p > 1 : return 1
+    return p
+  elif alt in ('l', 'less') :
+    for i in range(max(0, n + K - N), k) :
+      p += hypergeo(N, K, n, i)
+      if p > 1 : return 1
+    return p
+  p *= 2
+  if p > 1 : p = 1
+  return p
+
+def binomial(n, k, p = 0.5, show=False):
   if k > n or k < 0: return 0
   if p < 0 : p = 0
   if p > 1 : p = 1
@@ -131,7 +150,7 @@ def binomial(k, n, p = 0.5, show=False):
     pr *= pi
     if show: print (pr)
   return pr
-def binom_log(k, n, p = 0.5, show = False): #log probability value
+def binom_log(n, k, p = 0.5, show = False): #log probability value
   if n < 0 : return None
   if k > n or k < 0: return None #None is log(0)
   if p <= 0 :
@@ -144,11 +163,11 @@ def binom_log(k, n, p = 0.5, show = False): #log probability value
   lpr = math.log(p) * k + math.log(1-p) * (n-k)
   lpr += combination_log(n, k)
   return lpr
-def binom_test(k, n, p = 0.5, alt = "g", log = True, show=False): 
+def binom_test(n, k, p = 0.5, alt = "g", log = True, show=False): 
   '''binomial test, no two sided yet!
   '''
-  if not log : return binomTest0(k, n, p, alt, show) # if log, p are calculated with log values
-  lpk = binom_log(k, n, p)
+  if not log : return binomTest0(n, k, p, alt, show) # if log, p are calculated with log values
+  lpk = binom_log(n, k, p)
   if show : print (lpk)
   if lpk is None : 
     if alt[0] == 'g' and p >= 1: return 1
@@ -168,10 +187,10 @@ def binom_test(k, n, p = 0.5, alt = "g", log = True, show=False):
       lpk += lq + logarr[i] - lp - logarr[n - i + 1] #r = q * i / p / (n - i + 1)
       pv += math.exp(lpk)
   return pv
-def binomTest0(k, n, p = 0.5, alt = "g", show=False): # No two sided yet!
+def binomTest0(n, k, p = 0.5, alt = "g", show=False): # No two sided yet!
   '''binomial test no log version
   '''
-  pk = binomial(k, n, p)
+  pk = binomial(n, k, p)
   if show : print (pk)
   if pk == 1 : return 1
   if pk == 0 : 
@@ -549,7 +568,7 @@ class Poisson:
     return math.exp(self.logpmf(k))
   def cdf(self, k = 0, logarr = logarr):
     if k < 0 : return 0
-    logarr_ext(k, logarr = logarr)
+    logarr_ext(k)
     lpr = self.logpmf(0)
     logl = math.log(self.l)
     cdf = math.exp(lpr)
@@ -611,7 +630,7 @@ class ZTPoisson(Poisson):
     #return math.exp(self.logpmf(k))
   def cdf(self, k = 1, logarr = logarr):
     if k <= 0 : return 0
-    logarr_ext(k, logarr = logarr)
+    logarr_ext(k)
     lpr = self.logpmf(1)
     logl = math.log(self.l)
     cdf = math.exp(lpr)
@@ -964,3 +983,35 @@ def glmNBTest(x, y):
   p = model.pvalues[1] / 2
   if model.tvalues[1] >= 0 : return p
   else : return 1-p
+
+class betaBinom:
+  ''' Beta-Binomial distribution model
+  '''
+  def __init__(self, a, b): # alpha & beta
+    self.a = a
+    self.b = b
+  def logpmf(self, n, k):
+    return combination_log(n, k) + betaln(k + self.a, n - k + self.b) - betaln(self.a, self.b)
+  def pmf(self, n, k):
+    return math.exp(self.logpmf(n, k))
+  def cdf(self, n, k):
+    p = 0
+    for i in range(k+1):
+      p += self.pmf(n, i)
+    if p > 1 : p = 1
+    return p
+  def pvalue(self, n, k, alt = 'two.sided'):
+    cdf = self.cdf(n, k)
+    if alt in ('l', 'less') : return cdf
+    else :
+      p = 1 - cdf + self.pmf(n, k)
+      if alt in ('g', 'greater') : return p
+      else :
+        m = min(cdf, p) * 2
+        if m > 1 : m = 1
+        return m
+    #if alt not in ('g', 'greater') : return cdf
+    #else :
+      #p = self.pmf(n, k)
+      #return 1 - cdf + p
+

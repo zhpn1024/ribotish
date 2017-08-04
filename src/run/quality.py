@@ -1,5 +1,5 @@
 #import sys, getopt
-from ribotish.zbio import ribo, plot
+from ribotish.zbio import ribo, plot, io, bam
 
 def help():
   return "Quality control for riboseq data"
@@ -12,6 +12,7 @@ def set_parser(parser):
   parser.add_argument('-t', "--tis", action="store_true", help="The data is TIS enriched (for LTM & Harritonine)")
   parser.add_argument("-i", type=str, dest="input", help="Input previous output file, do not read gene file and bam file again")
   parser.add_argument("--geneformat", type=str, default='auto', help="Gene annotation file format (gtf, bed, gpd, gff, default: auto)")
+  parser.add_argument("--chrmap", type=str, help="Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files")
 
   # quality result output
   parser.add_argument("-f", type=str, dest="figpdfpath", help="Output pdf figure file (default: ribobampath[:-4]+ '_qual.pdf')")
@@ -55,6 +56,14 @@ def run(args):
       exit(1)
     if args.output is None : 
       args.output = args.ribobampath[:-4] + '_qual.txt'
+    if args.chrmap is not None :
+      chrmap = {}
+      for lst in io.splitIter(args.chrmap):
+        chrmap[lst[0]] = lst[1]
+        chrmap[lst[1]] = lst[0]
+      bam.chrmap = chrmap
+    #fa.chrmap = chrmap
+
     # read data
     results = ribo.lendis(args.genepath, args.ribobampath, lens = args.lens, dis = args.dis, minR = minR, m0 = m0, paired = args.paired,
                           cdsBins = args.bins, numProc = args.numProc, verbose = args.verbose, geneformat = args.geneformat)
@@ -67,10 +76,10 @@ def run(args):
     print('Counted reads: {}'.format(s))
     outfile.close()
     args.input = args.output
-    if args.figpdfpath is None : 
-      args.figpdfpath = args.ribobampath[:-4] + '_qual.pdf'
-    if args.parapath is None : 
-      args.parapath = args.ribobampath + '.para.py'
+  if args.figpdfpath is None : 
+    args.figpdfpath = args.ribobampath[:-4] + '_qual.pdf'
+  if args.parapath is None : 
+    args.parapath = args.ribobampath + '.para.py'
   # get quality plot and quality parameter file
   qualityPlot(args)
 
@@ -143,6 +152,18 @@ def qualityPlot(args):
 
   parafile = open(args.parapath, 'w') 
   ribo.write_off_para(parafile, offdict)
+  n = nt = 0
+  for l in offdict :
+    if l in disf : 
+      n += sum(disf[l])
+      if args.tis : nt += dis1[l][-args.dis[0] - offdict[l]]
+  if m0 :
+    for l in offdict['m0'] :
+      n += sum(disfm0[l])
+      if args.tis : nt += dis1m0[l][-args.dis[0] - offdict['m0'][l]]
+  if args.verbose : 
+    print('Effective RPF counts: {}'.format(n))
+    if args.tis : print('Effective TIS counts: {}'.format(nt))
 
 def nearest(n, up = True, step = 10, levels = range(1, 10)):
   lasti = i = e = 1

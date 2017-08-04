@@ -1,3 +1,15 @@
+2017-7-28 ribotish 0.1.8
+
+	Add TIS initiation efficiency comparison in tisdiff.
+
+	For replicate data, tisdiff still cannot deal with replicate samples, but can now export count table for replicate samples
+
+2017-4-20 ribotish 0.1.7
+
+	Fix error in quality using one CPU.
+
+	Fix pth error in tisdiff.
+
 2017-3-22 ribotish 0.1.6
 
 	Add --inprofile option in predict. Ribotish can load transcript RPF profile from txt file generated from --transprofile option instead of bam files.

@@ -29,6 +29,16 @@ def rc(seq):
        'W':'W', 'N':'N', 'S':'S'}
   return ''.join([comps[x] for x in seq.upper()[::-1]])
 
+def changechr(chr):
+  '''change between two chr versions
+  '''
+  if chr.isdigit() or chr in ('X','Y','M'): return 'chr' + chr
+  elif chr == 'MT' : return 'chrM'
+  elif chr == 'chrM' : return 'MT'
+  elif chr[0:3] == 'chr' : return chr[3:]
+  else : return chr
+
+chrmap = {}
 
 class Faidx:
   '''index for genome fasta file
@@ -108,7 +118,22 @@ class Fa:
       idx = Faidx(lst[0])
       idx.length, idx.pos, idx.ls, idx.ll = list(map(int, lst[1:5]))
       self.idx[idx.id] = idx
-
+  def get_chrname(self, chr) : #, chrmap = chrmap):
+    #sprint(chrmap)
+    if chr in self.idx : return chr
+    if chr in chrmap :
+      chr1 = chrmap[chr]
+      if chr1 in self.idx : return chr1
+      else : 
+        chr2 = changechr(chr1)
+        if chr2 in self.idx : return chr2
+    chr1 = changechr(chr)
+    if chr1 == chr : return None
+    if chr1 in self.idx : return chr1
+    elif chr1 in chrmap : 
+      chr2 = chrmap[chr1]
+      if chr2 in self.idx : return chr2
+    return None
   def seekpos(self, fid, p):
     idx = self.idx[fid]
     pos = idx.pos # chr start
@@ -116,6 +141,11 @@ class Fa:
     pos += p % idx.ls # base start
     return pos
   def fetch(self, fid, start = 0, stop = -1, length = -1):
+    chr = self.get_chrname(fid)
+    if chr is None : 
+      print("fa id {} not found in fasta file!".format(fid))
+      return None
+    fid = chr
     if start < 0 : start = start % self.idx[fid].length
     if length < 0 : 
       if stop < 0 : stop = stop % self.idx[fid].length

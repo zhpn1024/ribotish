@@ -10,7 +10,7 @@
 # the distribution).
 # 
 # @status:  experimental
-# @version: 0.1.7
+# @version: 0.1.8
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 
@@ -64,9 +64,6 @@ if __name__ == '__main__':
                          ["matplotlib >= 1.4.3"],
                          ["scipy >= 0.15.1"],
                          ]
-    # Python 2.6 requires argparse
-    if float(sys.version[:3]) == 2.6:
-        install_requires.append(["argparse >= 1.2.1"])
 
     setup(name=PROG,
           version=VERSION,

@@ -22,6 +22,7 @@ def set_parser(parser):
   parser.add_argument("-s", type=str, dest="inestpath", help="Input background estimation result file instead of instant estimation")
   parser.add_argument("--transprofile", type=str, help="Output RPF P-site profile for each transcript")
   parser.add_argument("--inprofile", type=str, help="Input RPF P-site profile for each transcript, instead of reading bam reads, save time for re-running")
+  parser.add_argument("--chrmap", type=str, help="Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files")
   # predict options
   parser.add_argument("--alt", action="store_true", help="Use alternative start codons (all codons with 1 base different from ATG)")
   parser.add_argument("--altcodons", type=strlist, help="Use provided alternative start codons, comma seperated, eg. CTG,GTG,ACG")
@@ -34,7 +35,7 @@ def set_parser(parser):
   parser.add_argument("--genefilter", type=strlist, help="Only process given genes")
   parser.add_argument("--tpth", type=float, default=0.05, help="TIS p value threshold (default: 0.05)")
   parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
-  parser.add_argument("--minpth", type=float, default=0.05, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
+  parser.add_argument("--minpth", type=float, default=1, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
   parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
   parser.add_argument("--fsqth", type=float, default=1, help="Fisher's FDR q value threshold")
   parser.add_argument("--framelocalbest", action="store_true", help="Only report local best frame test results")
@@ -81,6 +82,13 @@ def run(args):
   transprofile = args.transprofile
   harrwidth = None
   TIS_types = ['Annotated', 'Truncated', 'Extended', "5'UTR", "3'UTR", 'Internal', 'Novel']
+  if args.chrmap is not None :
+    chrmap = {}
+    for lst in io.splitIter(args.chrmap):
+      chrmap[lst[0]] = lst[1]
+      chrmap[lst[1]] = lst[0]
+    bam.chrmap = chrmap
+    fa.chrmap = chrmap
   if args.harrwidth is not None : harrwidth = args.harrwidth
   elif args.harr : harrwidth = 15
   verbose = args.verbose
