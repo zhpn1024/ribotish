@@ -10,7 +10,7 @@ def set_parser(parser):
   parser.add_argument("-b", type=strlist, dest="ribobampaths", default=[], help="Ordinary riboseq bam files, comma seperated")
   parser.add_argument("-g", type=str, dest="genepath", required=True, help='Gene annotation file for ORF prediction')
   parser.add_argument("-f", type=str, dest="genomefapath", required=True, help="Genome fasta file")
-  parser.add_argument("-o", type=str, dest="output", required=True, help="Output result file")
+  parser.add_argument("-o", type=str, dest="output", default='predict.txt', required=True, help="Output result file")
   #### alt input options ####
   parser.add_argument("-i", type=str, dest="input", help="Only test input candidate ORFs, format: transID start stop (0 based, half open)")
   parser.add_argument("--geneformat", type=str, default='auto', help="Gene annotation file format (gtf, bed, gpd, gff, default: auto)")
@@ -23,6 +23,7 @@ def set_parser(parser):
   parser.add_argument("--transprofile", type=str, help="Output RPF P-site profile for each transcript")
   parser.add_argument("--inprofile", type=str, help="Input RPF P-site profile for each transcript, instead of reading bam reads, save time for re-running")
   parser.add_argument("--chrmap", type=str, help="Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files")
+  parser.add_argument("--allresult", type=str, help="All result output without FDR q-value threshold (default: output + '_all.txt', 'off' to turn off)")
   # predict options
   parser.add_argument("--alt", action="store_true", help="Use alternative start codons (all codons with 1 base different from ATG)")
   parser.add_argument("--altcodons", type=strlist, help="Use provided alternative start codons, comma seperated, eg. CTG,GTG,ACG")
@@ -37,7 +38,7 @@ def set_parser(parser):
   parser.add_argument("--fpth", type=float, default=0.05, help="Frame p value threshold (default: 0.05)")
   parser.add_argument("--minpth", type=float, default=1, help="At least one of TIS or frame p value should be lower than this threshold (default: 0.05)")
   parser.add_argument("--fspth", type=float, default=0.05, help="Fisher's p value threshold")
-  parser.add_argument("--fsqth", type=float, default=1, help="Fisher's FDR q value threshold")
+  parser.add_argument("--fsqth", type=float, default=0.05, help="Fisher's FDR q value threshold")
   parser.add_argument("--framelocalbest", action="store_true", help="Only report local best frame test results")
   parser.add_argument("--framebest", action="store_true", help="Only report best frame test results")
   parser.add_argument("--longest", action="store_true", help="Only report longest possible ORF results")
@@ -109,7 +110,7 @@ def run(args):
   tisoffdict = find_offset(args.tisbampaths, args.tispara)
   riboffdict = find_offset(args.ribobampaths, args.ribopara)
   if len(args.ribobampaths) == 0 : 
-    print('No ordinary riboseq data input. TIS data will also be used as ordinary riboseq data.')
+    print('No regular RiboSeq data input. TIS data will also be used as regular RiboSeq data.')
     tis2ribo = True
   if len(args.tisbampaths) == 1 : 
     if args.inestpath is None : 
@@ -127,7 +128,7 @@ def run(args):
     print('No input TIS data!')
     paras, slp = [(1,0.5)], [1] # No TIS input
   elif args.inestpath is None : #== '' :
-    print ("{} Estimate TIS parameters...".format(time.ctime()))
+    print ("{} Estimating TIS parameters...".format(time.ctime()))
     if args.verbose : print("TIS estimation result will be saved to {}".format(args.estpath))
     if args.numProc > 1 : 
       from multiprocessing import Process
@@ -268,13 +269,24 @@ def run(args):
   s += '\n'
   outfile.write(s)
 
+  if args.allresult is not None and args.allresult.upper() == 'OFF' : allout = None
+  else : 
+    if args.allresult is None : 
+      lst = args.output.split('.')
+      if lst[-1] == 'txt' : args.allresult = args.output[:-4] + '_all.txt' 
+      else : args.allresult = args.output + '_all.txt'
+    allout = open(args.allresult, 'w')
+    allout.write(s)
+
   for e in profile:
-    if e.q > args.fsqth : continue
+    #if e.q > args.fsqth : continue
+    if len(tisbampaths) == 0 : e.data[5], e.data[8] = None, None # No Fisher's
     s = "%s\t%d" % (e, e.length)
     if seq : s += '\t' + e.sq
     if aaseq : s += '\t' + e.aa
     s += '\n'
-    outfile.write(s) # "%s\t%d\n" % (e, e.length)) #, e.sq))
+    if allout is not None : allout.write(s)
+    if e.q <= args.fsqth : outfile.write(s) # "%s\t%d\n" % (e, e.length)) #, e.sq))
   
 def check_overlap(e, known_tis, cds_regions) : 
   if e.tistype == 0 : return ''
@@ -465,7 +477,7 @@ def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   return e
 
 def pvalStatus(ps) : 
-  '''Find global best (T) & local best (L) TISs that correspond to same stop codon, suggesting potential TISs by ordinary riboseq data
+  '''Find global best (T) & local best (L) TISs that correspond to same stop codon, suggesting potential TISs by regular RiboSeq data
   '''
   l = len(ps)
   st = ['N'] * l

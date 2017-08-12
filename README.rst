@@ -1,6 +1,6 @@
-README for Ribo-TISH (0.1.7)
+README for Ribo-TISH (0.1.8)
 ==================================
-<2017-4-20 Peng Zhang>
+<2017-8-4 Peng Zhang>
 
 Introduction
 ============
@@ -24,7 +24,7 @@ Usage of Ribo-TISH
 
 :Example for prediction: ``ribotish predict -t ltm.bam -b chx.bam -g gene.gtf -f genome.fa -o pred.txt``
 
-:Example for differential TIS: ``ribotish tisdiff -1 pred1.txt -2 pred2.txt -a qti1.bam -b qti2.bam -g gene.gtf -o diff.txt --plotout diff.pdf``
+:Example for differential TIS: ``ribotish tisdiff -1 pred1.txt -2 pred2.txt -a qti1.bam -b qti2.bam -g gene.gtf -o diff.txt``
 
 There are 3 functions available as sub-commands.
 
@@ -89,6 +89,17 @@ Input previous output file, do not read gene file and bam file again.
 ```````````````````````
 
 Gene annotation file format (gtf, bed, gpd, gff, default: auto)
+
+--chrmap CHRMAP
+```````````````
+
+Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files. Format:
+
+========= =========
+chr_name1 chr_name2
+========= =========
+
+Two columns, tab seperated, no specific order requirement.
 
 -f FIGPDFPATH
 `````````````

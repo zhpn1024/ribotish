@@ -1,8 +1,14 @@
 2017-7-28 ribotish 0.1.8
 
+	Many updates.
+
 	Add TIS initiation efficiency comparison in tisdiff.
 
-	For replicate data, tisdiff still cannot deal with replicate samples, but can now export count table for replicate samples
+	For replicate data, tisdiff still cannot deal with replicate samples, but can now export count table for replicate samples.
+
+	Add '--chrmap' option to match different chr name versions between fasta, bam and gene annotation files. Simple conversions such as 'chr1' to '1' will be matched automatically without using this option.
+
+	Quality can print total effective RPF counts that were assigned offset values in annotated CDS regions under -v option.
 
 2017-4-20 ribotish 0.1.7
 
