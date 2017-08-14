@@ -96,7 +96,8 @@ def run(args):
   alt = args.alt
   if args.altcodons is not None : 
     alt = True
-    orf.cstartlike = [c.upper() for c in args.altcodons]
+    if args.altcodons[0].upper() == 'ALL' : orf.cstartlike = orf.allcodons
+    else : orf.cstartlike = [c.upper() for c in args.altcodons]
   tpth, fpth, minpth, framebest, framelocalbest = args.tpth, args.fpth, args.minpth, args.framebest, args.framelocalbest # fspth
   fspth = args.fspth
   longest = args.longest

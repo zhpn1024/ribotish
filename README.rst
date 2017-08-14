@@ -93,13 +93,13 @@ Gene annotation file format (gtf, bed, gpd, gff, default: auto)
 --chrmap CHRMAP
 ```````````````
 
-Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files. Format:
+Input chromosome id mapping table file if annotation chr ids are not the same as chr ids in bam/fasta files. Format:
 
 ========= =========
 chr_name1 chr_name2
 ========= =========
 
-Two columns, tab seperated, no specific order requirement.
+Two columns, tab seperated, no specific order requirement. Mappings such as 'chr1' to '1' can be automatically processed without using this option.
 
 -f FIGPDFPATH
 `````````````
@@ -182,7 +182,7 @@ Ribo-TISH does not guarantee that it can always find best P-site offset values. 
 predict
 ~~~~~~~
 
-This is the main function of Ribo-TISH. This function predicts ORF/TIS with riboseq bam files. This function uses negative binomial model to fit TI-Seq background and test significance of TIS sites. For regular riboseq data, rank sum test between in frame reads and out frame reads inside the ORF is tested.
+This is the main function of Ribo-TISH. This function predicts ORF/TIS with riboseq bam files. This function uses negative binomial model to fit TI-Seq background and test significance of TIS sites. For regular riboseq data, Wilcoxon rank sum test between in-frame reads and out-frame reads inside the ORF is performed.
 
 Quick examples:
 
@@ -200,6 +200,11 @@ User provided candidates with two regular riboseq data
 ::
 
   ribotish predict -b chx1.bam,chx2.bam -g gene.gtf -f genome.fa -i cand.txt -o pred.txt
+
+De novo ORF prediction with only regular riboseq data using longest strategy
+::
+
+  ribotish predict -b chx.bam -g gene.gtf -f genome.fa --longest -o pred.txt
 
 Options
 --------------
@@ -250,6 +255,11 @@ Start, stop position is 0 based, half open. Stop - start should be multiples of 
 
 Gene annotation file format (gtf, bed, gpd, gff, default: auto)
 
+--chrmap CHRMAP
+```````````````
+
+Input chromosome id mapping table file if annotation chr ids are not same as chr ids in bam/fasta files. See --chrmap option in ```quality``` section.
+
 --tispara TISPARA
 `````````````````
 
@@ -282,7 +292,7 @@ Input background estimation result file instead of instant estimation. By defaul
 -a AGENEPATH
 ````````````
 
-Another gene annotation file for ORF annotation instead of ```-g``` gene file
+Another gene annotation file for ORF annotation in addition to ```-g``` gene file. This option is mainly used when ```-g``` annotation focuses on predicting ORFs in non-coding transcripts and does not have sufficient protein coding gene annotation. Protein coding gene annotation is used for TIS background estimation as well as output TIS type classification.
 
 --alt
 `````
@@ -344,7 +354,7 @@ Frame p value threshold. Default: 0.05.
 --minpth MINPTH
 ```````````````
 
-At least one of TIS or frame p value should be lower than this threshold. Default: 0.05.
+At least one of TIS or frame p value should be lower than this threshold. Default: 1.
 
 --fspth FSPTH
 `````````````

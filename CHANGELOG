@@ -10,6 +10,12 @@
 
 	Quality can print total effective RPF counts that were assigned offset values in annotated CDS regions under -v option.
 
+	Add R scripts for differential TIS with replicates.
+
+	Add --allresult option for saving non-filtered results.
+
+	Fisher's method p-value will report None for regular Riboseq only prediction.
+
 2017-4-20 ribotish 0.1.7
 
 	Fix error in quality using one CPU.

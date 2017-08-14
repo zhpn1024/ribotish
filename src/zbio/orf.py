@@ -135,7 +135,7 @@ def allorf(seq, strand = '+', minaalen = 0, tail = -1) :
       except: break
       if codon in cstart: o.starts.append(i)
       elif codon in cstartlike: o.altstarts.append(i)
-      elif codon in cstop:
+      if codon in cstop:
         #o.end = i
         o.stop = i + codonSize
         o.filtByLen(minaalen = minaalen, tail = tail)
@@ -211,6 +211,9 @@ AACodon = {'F':['TTC','TTT'], 'L':['CTG','CTC','CTT','TTG','TTA','CTA'], 'M':['A
            'Y':['TAC','TAT'], '*':['TAA','TAG','TGA'], 'H':['CAC','CAT'], 'Q':['CAG','CAA'], 'N':['AAC','AAT'], 'K':['AAG','AAA'], 'D':['GAC','GAT'], 'E':['GAG','GAA'],
            'C':['TGC','TGT'], 'W':['TGG'], 'R':['AGA','AGG','CGG','CGC','CGA','CGT'], 'G':['GGC','GGA','GGG','GGT']
            } # ordered by human codon usage
+
+allcodons = list(codonTable.keys())
+
 def translate(seq):
   aa = ""
   for i in range(0, len(seq), codonSize):
