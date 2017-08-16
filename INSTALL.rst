@@ -43,7 +43,11 @@ If you do not want pip to fix dependencies, type::
 Install from source
 ===================
 
-To install a source distribution, download source from PyPI_ or GitHub_. The latest updates usually appear on GitHub first. Go to the directory and simply run the install script::
+To install a source distribution, download source from PyPI_ or GitHub_. The latest updates usually appear on GitHub first.::
+
+ $ git clone https://github.com/zhpn1024/ribotish
+
+Go to the directory and simply run the install script::
 
  $ python setup.py install
 
