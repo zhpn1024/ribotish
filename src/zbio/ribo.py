@@ -837,6 +837,7 @@ class lenDis:
             else : self.dc[l][j][i] += cfcnts[j][si1]
             for si in range(si1 + 1, si2) : self.dc[l][j][i] += cfcnts[j][si]
             if i < bins - 1 and si2 < stop : self.dc[l][j][i] += cfcnts[j][si2] * (stop - si2)
+            if i == bins - 1 and si2 < length : self.dc[l][j][i] += cfcnts[j][si2]
             self.dc[l][j][i] /= binsize
     return self.dc
   def merge(self, other):
