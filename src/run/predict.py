@@ -129,8 +129,8 @@ def run(args):
     print('No input TIS data!')
     paras, slp = [(1,0.5)], [1] # No TIS input
   elif args.inestpath is None : #== '' :
-    print ("{} Estimating TIS parameters...".format(time.ctime()))
-    if args.verbose : print("TIS estimation result will be saved to {}".format(args.estpath))
+    print ("{} Estimating TIS background parameters...".format(time.ctime()))
+    if args.verbose : print("TIS background estimation result will be saved to {}".format(args.estpath))
     if args.numProc > 1 : 
       from multiprocessing import Process
       import multiprocessing.pool

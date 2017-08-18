@@ -616,7 +616,7 @@ def _cdsCounts(args): # updated for bampath list
   cds2 = t.cds_stop(cdna = True)
   if cds2 is None or cds2 == cds1 : return None
   if cds2 < cds1 or (cds2 - cds1) % 3 > 0 : 
-    print('Wrong CDS: {} {} {}'.format(t.id, cds1, cds2))
+    print('Wrong CDS annotation: {} {} {}'.format(t.id, cds1, cds2))
     return None
   tis = multiRibo(t, bampaths, offdict = offdict, compatible = False, paired = paired) # not compatible
   score = tis.abdscore()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Description: Ribo TIS Hunter main executable.
+"""Description: Ribo-TISH (Ribo TIS Hunter) main executable.
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 This code is free software; you can redistribute it and/or modify it
 under the terms of the BSD License (see the file COPYING included with
@@ -18,7 +18,7 @@ from ribotish.run import commands
 # Main function
 # ------------------------------------
 def main():
-  """The Main function/pipeline for Ribo TIS Hunter.
+  """The Main function/pipeline for Ribo-TISH.
   """
   # Parse options...
   argparser = prepare_argparser()
@@ -34,7 +34,7 @@ def main():
 def prepare_argparser ():
   """Prepare argparser object.
   """
-  description = "%(prog)s -- Ribo TIS Hunter"
+  description = "%(prog)s -- Ribo-TISH"
   epilog = "For command line options of each command, type: %(prog)s COMMAND -h"
   #Source code: https://github.com/zhpn1024/"
   # top-level parser
