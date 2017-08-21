@@ -38,6 +38,10 @@ If you do not want pip to fix dependencies, type::
 
   $ pip install --no-deps ribotish
 
+To install/upgrade Ribo-TISH under HOME directory without fixing dependencies::
+
+  $ pip install --no-deps -U --user ribotish
+
 .. _pip: http://www.pip-installer.org/en/latest/installing.html
 
 Install from source
