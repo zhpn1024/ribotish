@@ -10,23 +10,25 @@ class Interval:
   '''intervals in 1 dimentional axis
   all intervals are supposed to be [start, end) and start <= end
   '''
-  def __init__(self, start = 0, stop = 0, id = '', itvs = []):
+  def __init__(self, start = None, stop = None, id = '', itvs = [], adj_merge=True):
     self.id = id
     self.lst = [] # list of (start, stop) tuples
-    if itvs == [] and start != stop : self.lst.append((start, stop))
+    self.adj_merge = adj_merge
+    if itvs == []:
+      if start is not None and start <= stop : self.lst.append((start, stop))
     else :
       self.lst += itvs
       #for itv in itvs:
         #self.lst.append(itv[:])
     self.check()
-  def check(self, adj_merge = True) :
+  def check(self):
     for itv in self.lst[:]:
       if itv[0] > itv[1] : self.lst.remove(itv)
     self.lst.sort()
     dl = [] # delete list
     j = 0
     for i in range(1, len(self.lst)):
-      if self.lst[i][0] < self.lst[j][1] or (adj_merge and self.lst[i][0] == self.lst[j][1]) :
+      if self.lst[i][0] < self.lst[j][1] or (self.adj_merge and self.lst[i][0] == self.lst[j][1]) :
         if self.lst[j][1] < self.lst[i][1] : self.lst[j] = (self.lst[j][0], self.lst[i][1]) # self.lst[j][1] = self.lst[i][1]
         dl.append(i)
       else : j = i
@@ -46,7 +48,7 @@ class Interval:
   def __getitem__(self, i): 
     return self.lst[i]
   def __add__(self, other): # do not change self
-    new = Interval(itvs = self)
+    new = Interval(itvs = self, adj_merge=self.adj_merge)
     new.lst += list(other)
     #for itv in other:
       #new.lst.append(itv[:])
@@ -54,9 +56,9 @@ class Interval:
     return new
   def add(self, other):
     return self + other
-  def add_itv(self, itv): # input single interval, change the object
+  def add_itv(self, itv, check=True): # input single interval, change the object
     self.lst.append(tuple(itv))
-    self.check()
+    if check: self.check()
     return self
   def sub_itv(self, itv):
     if itv[0] > itv[1] : return self
@@ -83,7 +85,7 @@ class Interval:
         if itv[0] < other[j][0] : lst.append((itv[0], other[j][0]))
         for i in range(j, j1-1) : lst.append((other[i][1], other[i+1][0]))
         if itv[1] > other[j1-1][1] : lst.append((other[j1-1][1], itv[1]))
-    new = Interval(itvs = lst)
+    new = Interval(itvs = lst, adj_merge=self.adj_merge)
     return new
     #new = Interval(itvs = self)
     #for itv in other:
@@ -119,7 +121,7 @@ class Interval:
         lst.append((max(itv[0], other[j1][0]), min(itv[1], other[j1][1])))
         j1 += 1
       if j >= len(other) : break
-    new = Interval(itvs = lst)
+    new = Interval(itvs = lst, adj_merge=self.adj_merge)
     return new
     #return (self + other) - (self - other) - (other - self) # hehe
   def nearest(self, p): 

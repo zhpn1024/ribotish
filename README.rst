@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.8)
 ==================================
-<2017-8-16 Peng Zhang>
+<2017-9-10 Peng Zhang>
 
 Introduction
 ============
@@ -380,6 +380,11 @@ Fisher's p value threshold. Default: 0.05.
 
 Fisher's FDR q value threshold. Default: 0.05.
 
+--allresult
+```````````
+
+All result output without FDR q-value threshold (default: output + '_all.txt', 'off' to turn off)
+
 -p NUMPROC
 ``````````
 
@@ -430,6 +435,10 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 :RiboQvalue:	BH correction q-value of frame test
 :FisherQvalue:	BH correction q-value of Fisher's p-value
 :AALen:		Amino acid length of the ORF
+
+ALL
+```
+The '_all' output result is generated according to ```--allresult``` option, which is similar to the output but do not use FDR (q-value) cutoff. Other cutoffs are the same as output option.
 
 tisdiff
 ~~~~~~~

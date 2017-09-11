@@ -152,7 +152,9 @@ class Bam():#AlignedRead
     else : return "Bam paired AlignedSegment {} {}".format(self.id, str(self))
   def __str__(self):
     return "%s:%d-%d:%s" % (self.chr, self.fragment_start, self.fragment_stop, self.strand)
-  
+
+  def get_tag(self, k):
+    return self.read.get_tag(k)
   def cdna_length(self): 
     return self.read.query_alignment_length
     #else : return self.fragment_length()

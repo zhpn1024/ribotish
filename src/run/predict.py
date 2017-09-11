@@ -271,6 +271,7 @@ def run(args):
   outfile.write(s)
 
   if args.allresult is not None and args.allresult.upper() == 'OFF' : allout = None
+  elif args.fsqth == 1: allout = None
   else : 
     if args.allresult is None : 
       lst = args.output.split('.')

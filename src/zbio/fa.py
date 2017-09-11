@@ -140,16 +140,23 @@ class Fa:
     pos += int(p / idx.ls) * idx.ll # line start
     pos += p % idx.ls # base start
     return pos
-  def fetch(self, fid, start = 0, stop = -1, length = -1):
+
+  def get_pos(self, fid, start = 0, stop = -1, length = -1):
+  #def fetch(self, fid, start = 0, stop = -1, length = -1):
     chr = self.get_chrname(fid)
     if chr is None : 
       print("fa id {} not found in fasta file!".format(fid))
-      return None
+      return None, None, None, None
     fid = chr
     if start < 0 : start = start % self.idx[fid].length
     if length < 0 : 
       if stop < 0 : stop = stop % self.idx[fid].length
       length = stop - start
+    return fid, start, stop, length
+
+  def fetch(self, fid, start = 0, stop = -1, length = -1):
+    fid, start, stop, length = self.get_pos(fid, start, stop, length)
+    if fid is None: return None
     if length <= 0 : return ''
     self.file.seek(self.seekpos(fid, start))
     seq = ''
@@ -172,6 +179,20 @@ class Fa:
     if e.strand == '-': s = rc(s)
     return s
   def transSeq(self, trans):
-    s = ''
-    for e in trans.exons: s += self.exonSeq(e)
-    return s
+    s = []
+    for e in trans.exons: s.append(self.exonSeq(e))
+    return ''.join(s)
+
+  def intervalSeq(self, fid, regions, strand='+'):
+    chr = self.get_chrname(fid)
+    if chr is None :
+      print("fa id {} not found in fasta file!".format(fid))
+      return None
+    s = []
+    for itv in regions:
+      s.append(self.fetch(chr, itv[0], itv[1]))
+    sq = ''.join(s)
+    if strand == '-': sq = rc(sq)
+    return sq
+
+
