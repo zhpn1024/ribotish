@@ -139,6 +139,16 @@ Do not consider reads with mismatch at position 0 (5' end mismatch) as a new gro
 
 Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be considered as low quality and this group of reads will not be used in further analysis. The offset for low quality groups will not be set in parameter file.
 
+--colorblind
+````````````
+
+Use a color style Use color style readable for color blind people ('#F00078,#00F000,#0078F0')
+
+--colors
+````````
+
+User specified Matplotlib accepted color codes for three frames (default: 'r,g,b')
+
 -p NUMPROC
 ``````````
 
@@ -438,7 +448,7 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 
 ALL
 ```
-The '_all' output result is generated according to ```--allresult``` option, which is similar to the output but do not use FDR (q-value) cutoff. Other cutoffs are the same as output option.
+The '_all' output result is generated according to ```--allresult``` option, which is similar to the output but do not use FDR (q-value) cutoff. Other cutoffs are the same as output file.
 
 tisdiff
 ~~~~~~~

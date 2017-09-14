@@ -29,6 +29,9 @@ def set_parser(parser):
   parser.add_argument("--secondary", action="store_true", help="Use bam secondary alignments")
   parser.add_argument("--paired", action="store_true", help="Reads are paired end")
   
+  parser.add_argument("--colorblind", action="store_true", help="Use a color style readable for color blind people ('#F00078,#00F000,#0078F0')")
+  parser.add_argument("--colors", type=strlist, help="User specified Matplotlib accepted color codes for three frames (default: 'r,g,b')")
+
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes (default: 1)")
   parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
 
@@ -38,6 +41,11 @@ def int2(s):
   lst = eval('['+s+']')
   return tuple(map(int, lst))
 
+def strlist(s):
+  '''Convert comma seperated file name string to list
+  '''
+  return s.split(',')
+
 #m0 = True
 def run(args):
   '''Main function for quality control
@@ -46,6 +54,13 @@ def run(args):
   m0 = True
   if args.nom0 : m0 = False
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
+  global fbcols
+  fbcols = ['r','g','b','r','g','b']
+  if args.colorblind:
+    fbcols = ['#F00078', '#00F000', '#0078F0'] # ['#FA007D', '#00E800', '#007DFA']
+  if args.colors is not None:
+    fbcols = args.colors
+
   if args.input is None :
     minR = 1
     if args.genepath is None : 
@@ -83,7 +98,9 @@ def run(args):
   # get quality plot and quality parameter file
   qualityPlot(args)
 
-fbcols = ['r','g','b','r','g','b']
+#fbcols = ['r','g','b','r','g','b']
+#if args.colorblind:
+  #fbcols = ['#FF008C', '#00FF00', '008CFF']
 
 def qualityPlot(args):
   ''' Quality plot and offset parameters
@@ -260,7 +277,7 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
   if use : tcol = fbcols[frame]
   ax1 = plot.subplot(gs[i, start+1:start+3])
   x = list(range(*args.dis))
-  stdisplot(ax1, x, dis1[l], lab = txt, hali = 'left', f0 = -args.dis[0], tcol = tcol)
+  stdisplot(ax1, x, dis1[l], lab = txt, hali = 'left', f0 = -args.dis[0], color=fbcols, tcol = tcol)
   
   if use and not args.tis : 
     plot.hlines(th, -18, -6, color=tcol, linestyles ='dashed')
@@ -269,7 +286,7 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
     ax1.text(mp+1 ,max(dis1[l]+[1])*0.7 , tistxt, horizontalalignment='left',verticalalignment='top', size='medium', color = tcol)
   ax2 = plot.subplot(gs[i, start+3:start+5])
   
-  stdisplot(ax2, x, dis2[l], lab = '', hali = 'right', f0 = -args.dis[0], tcol = tcol)
+  stdisplot(ax2, x, dis2[l], lab = '', hali = 'right', f0 = -args.dis[0], color=fbcols, tcol = tcol)
   ax3 = plot.subplot(gs[i, start+5])
   cdsplot(ax3, disc[l])
   if args.tis : 
