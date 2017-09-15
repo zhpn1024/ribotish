@@ -1,3 +1,11 @@
+2017-9-15 ribotish 0.1.9
+
+	Add --colorblind option in quality to generate another color style readable for color blind people.
+
+	Add --colors option for customizing color style.
+
+	Some doc updates.
+
 2017-7-28 ribotish 0.1.8
 
 	Many updates.

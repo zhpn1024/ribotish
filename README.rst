@@ -1,6 +1,6 @@
-README for Ribo-TISH (0.1.8)
+README for Ribo-TISH (0.1.9)
 ==================================
-<2017-9-10 Peng Zhang>
+<2017-9-15 Peng Zhang>
 
 Introduction
 ============
@@ -142,7 +142,7 @@ Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be co
 --colorblind
 ````````````
 
-Use a color style Use color style readable for color blind people ('#F00078,#00F000,#0078F0')
+Use a color style readable for color blind people ('#F00078,#00F000,#0078F0')
 
 --colors
 ````````
@@ -393,7 +393,7 @@ Fisher's FDR q value threshold. Default: 0.05.
 --allresult
 ```````````
 
-All result output without FDR q-value threshold (default: output + '_all.txt', 'off' to turn off)
+All result output without FDR q-value threshold (default: output + '_all.txt', 'off' or using ```--fsqth 1``` to turn off)
 
 -p NUMPROC
 ``````````
