@@ -121,6 +121,8 @@ class Fa:
   def get_chrname(self, chr) : #, chrmap = chrmap):
     #sprint(chrmap)
     if chr in self.idx : return chr
+    mt = {'M':'MT', 'MT':'M'}
+    if chr in mt and mt[chr] in self.idx: return mt[chr]
     if chr in chrmap :
       chr1 = chrmap[chr]
       if chr1 in self.idx : return chr1

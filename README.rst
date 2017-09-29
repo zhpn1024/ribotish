@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.9)
 ==================================
-<2017-9-15 Peng Zhang>
+<2017-9-29 Peng Zhang>
 
 Introduction
 ============
@@ -147,7 +147,7 @@ Use a color style readable for color blind people ('#F00078,#00F000,#0078F0')
 --colors
 ````````
 
-User specified Matplotlib accepted color codes for three frames (default: 'r,g,b')
+User specified Matplotlib acceptable color codes for three frames (default: 'r,g,b')
 
 -p NUMPROC
 ``````````
@@ -390,10 +390,10 @@ Fisher's p value threshold. Default: 0.05.
 
 Fisher's FDR q value threshold. Default: 0.05.
 
---allresult
-```````````
+--allresult ALLRESULT
+`````````````````````
 
-All result output without FDR q-value threshold (default: output + '_all.txt', 'off' or using ```--fsqth 1``` to turn off)
+Write all result output without FDR q-value threshold to another file. (default: output + '_all.txt', 'off' or using ```--fsqth 1``` to turn off)
 
 -p NUMPROC
 ``````````
@@ -408,7 +408,7 @@ Increase output verbosity.
 --transprofile TRANSPROFILE
 ```````````````````````````
 
-Output RPF P-site profile for each transcript
+Output RPF P-site profile for each transcript. The profile data is in python dict format, recording non-zero read counts at different positions on transcript.
 
 --inprofile INPROFILE 
 ``````````````````````
@@ -604,13 +604,13 @@ OUTPUT
 The output is a txt file all differential TIS results that fit the thresholds. Some of the columns are:
 
 :FoldChange:	Fold change (2/1) value after normalization
-:DiffPvalue:	Binomial differential test p-value, one tailed.
+:DiffPvalue:	Differential test p-value, two-tailed.
 :DiffQvalue:	BH correction q-value of DiffPvalue
 
 EXPORT
 ``````
 
-The export table is generated using ```--export``` option. It is also automatically generated when the input data has replicated samples. It is a txt file with raw TIS counts for each predicted TIS. The format of TIS id is 'TransID_Start_GenomePos'
+The export table is generated using ```--export``` option. It is also automatically generated when the input data has replicated samples. It is a txt file with raw TIS counts for each predicted TIS. The format of TIS id is 'TransID_Start_GenomePos'.
 
 For replicated data, Ribo-TISH provided R scripts to call differential TISs using edgeR_ or DESeq2_.
 
@@ -624,7 +624,7 @@ For DESeq2:
 
   Rscript path_to_scripts/tisdiff_DESeq2.r tisdiff_export.txt 3 4 tisdiff_DESeq2_output.txt
 
-3 and 4 are number of replicates in each condition.
+3 and 4 are number of replicates in two conditions.
 
 .. _edgeR: https://bioconductor.org/packages/edgeR
 .. _DESeq2: https://bioconductor.org/packages/DESeq2
