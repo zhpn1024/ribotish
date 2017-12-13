@@ -6,7 +6,7 @@ outfile <- args[4]
 
 library(DESeq2)
 
-x <- read.delim(infile, row.names="TIS")
+x <- read.delim(infile, row.names=1)
 condition <- c(rep("c1",n1), rep("c2",n2))
 coldata <- as.data.frame(condition)
 dds <- DESeqDataSetFromMatrix(countData=x, colData=coldata, design= ~condition)

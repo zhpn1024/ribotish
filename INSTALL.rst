@@ -7,7 +7,9 @@ Please check the following instructions to complete your installation.
 Prerequisites
 =============
 
-Python version must be equal to *2.7*.
+Python version must be >= *2.7*.
+
+Ribo-TISH can run on python3, but not extensively tested.
 
 :Pysam_: >= 0.8.3
 :Scipy_: >= 0.15.1

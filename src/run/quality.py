@@ -169,6 +169,8 @@ def qualityPlot(args):
 
   parafile = open(args.parapath, 'w') 
   ribo.write_off_para(parafile, offdict)
+  total = sum(lendis.values())
+  if m0: total += sum(lendism0.values())
   n = nt = 0
   for l in offdict :
     if l in disf : 
@@ -179,6 +181,7 @@ def qualityPlot(args):
       n += sum(disfm0[l])
       if args.tis : nt += dis1m0[l][-args.dis[0] - offdict['m0'][l]]
   if args.verbose : 
+    print('Total RPF counts in mRNA: {}'.format(total))
     print('Effective RPF counts: {}'.format(n))
     if args.tis : print('Effective TIS counts: {}'.format(nt))
 

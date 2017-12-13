@@ -6,7 +6,7 @@ outfile <- args[4]
 
 library(edgeR)
 
-x <- read.delim(infile, row.names="TIS")
+x <- read.delim(infile, row.names=1)
 group <- factor(cbind(rep(1,n1),rep(2,n2)))
 y <- DGEList(counts=x,group=group)
 y <- calcNormFactors(y)

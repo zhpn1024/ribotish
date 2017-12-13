@@ -473,7 +473,7 @@ def estimate_tis_bg_all(gtfpath, bampath, genomefapath, parts = [0.25, 0.5, 0.75
     pool.close()
   return paras, slp, data
 
-def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2, paired = False): 
+def multiRibo(trans, bampaths, offset = offset, offdict = None, compatible = True, mis = 2, paired = False): 
   '''Load multiple ribobam files to one object
   '''
   if type(bampaths) == list : 
@@ -484,7 +484,7 @@ def multiRibo(trans, bampaths, offdict = None, compatible = True, mis = 2, paire
     offdict = [offdict]
   mribo = Ribo(trans) # Empty object
   for i in range(len(bamfiles)) :
-    mribo.merge(Ribo(trans, bamfiles[i], offdict = offdict[i], compatible = compatible, mis = mis, paired = paired))
+    mribo.merge(Ribo(trans, bamfiles[i], offset = offset, offdict = offdict[i], compatible = compatible, mis = mis, paired = paired))
   return mribo
 def multiRiboGene(gene, bampaths, offdict = None, compatible = True, mis = 2, paired = False): 
   '''Load multiple ribobam files to one object
@@ -654,6 +654,9 @@ def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], o
     ctotal += total
     fulldata[t.id] = tdata, score #, mcds1, mcds2
     genes.append(t)
+  if len(sl) < len(parts):
+    print('Too few TIS background samples! Known CDS annotation should be provided. See `-a` option')
+    exit(1)
   sl.sort()
   if verbose : print ('Group data...')
   slp = [None] * l
@@ -768,7 +771,7 @@ def frame_bias(arr): # ['0', '1', '2', '01', '02', '12', '012']
 class lenDis:
   '''Calculate several distributions for quality control
   '''
-  def __init__(self, lens, dis, tl = 0, cds1 = 0, cds2 = 0):
+  def __init__(self, lens, dis, tl = 0, cds1 = 0, cds2 = 0, offset = defOffset):
     d = dis[1] - dis[0]
     self.dis = dis
     self.lens = lens
@@ -779,6 +782,7 @@ class lenDis:
     self.dc = {}
     self.l = {}
     self.cnts = {}
+    self.offset = offset
     for l in range(lens[0], lens[1]):
       self.l[l] = 0
       self.d1[l] = [0] * d
@@ -801,7 +805,7 @@ class lenDis:
     for l in self.d1: 
       self.df[l] = [exp.ReadDict() for i in range(codonSize)] # reset
       for i in range(self.cds1, self.cds2 + codonSize, codonSize):
-        io = i - defOffset - codonSize # -15 -> stop
+        io = i - self.offset - codonSize # -15 -> stop
         if io < 0 : continue
         for i2 in range(codonSize):
           self.df[l][i2].record(self.cnts[l][io+i2]) #
@@ -822,7 +826,7 @@ class lenDis:
       cfcnts = [[0] * length for j in range(codonSize)] # profile in 3 frames
       for si in range(length) :
         for j in range(codonSize) : 
-          io = si * codonSize + j + self.cds1 - defOffset - codonSize
+          io = si * codonSize + j + self.cds1 - self.offset - codonSize
           if io < 0 : continue
           cfcnts[j][si] = self.cnts[l][io]
       for i in range(bins):

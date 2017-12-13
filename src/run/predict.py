@@ -162,6 +162,11 @@ def run(args):
       paras.append((float(lst[0]), float(lst[1])))
       slp.append(eval(lst[3]))
 
+  if args.inprofile is not None and not isfile(args.inprofile):
+    print('inprofile {} not found!'.format(args.inprofile))
+    if args.transprofile is None:
+      transprofile = args.inprofile
+
   if args.numProc > 1 : 
     from multiprocessing import Pool
     pool = Pool(processes = args.numProc - 1) 
@@ -194,13 +199,14 @@ def run(args):
       inorf[tid].append([tis, stop])
   inprofile = None
   if args.inprofile is not None :
-    if verbose : print('Loading transcript profile...')
-    inprofile = {}
-    for lst in io.splitIter(args.inprofile):
-      try : gid, tid, tispf, ribopf = lst[0], lst[1], eval(lst[3]), eval(lst[4])
-      except : continue
-      if gid not in inprofile : inprofile[gid] = {}
-      inprofile[gid][tid] = tispf, ribopf
+    if isfile(args.inprofile):
+      if verbose : print('Loading transcript profile...')
+      inprofile = {}
+      for lst in io.splitIter(args.inprofile):
+        try : gid, tid, tispf, ribopf = lst[0], lst[1], eval(lst[3]), eval(lst[4])
+        except : continue
+        if gid not in inprofile : inprofile[gid] = {}
+        inprofile[gid][tid] = tispf, ribopf
 
   print("{} Predicting...".format(time.ctime()))
   profile = exp.Profile()

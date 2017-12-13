@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.9)
 ==================================
-<2017-9-29 Peng Zhang>
+<2017-10-16 Peng Zhang>
 
 Introduction
 ============
@@ -132,7 +132,7 @@ Bins for cds profile Default: 20
 --nom0
 ```````````
 
-Do not consider reads with mismatch at position 0 (5' end mismatch) as a new group.
+Not consider reads with mismatch at position 0 (5' end mismatch) as a new group.
 
 --th TH
 ```````
@@ -144,8 +144,8 @@ Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be co
 
 Use a color style readable for color blind people ('#F00078,#00F000,#0078F0')
 
---colors
-````````
+--colors COLORS
+```````````````
 
 User specified Matplotlib acceptable color codes for three frames (default: 'r,g,b')
 
@@ -310,13 +310,13 @@ Another gene annotation file for ORF annotation in addition to ```-g``` gene fil
 --alt
 `````
 
-Use alternative start codons. If set, all codons with 1 base different from ATG will be considered as start codon in ORF finding. Affect both TIS background estimation and prediction. Do not affect ```-i``` mode prediction. To customize alt start codons, use ```--altcodons```.
+Use alternative start codons. If set, all codons with 1 base different from ATG will be considered as start codon in ORF finding. Affect both TIS background estimation and prediction. It does not affect ```-i``` mode prediction. To customize alt start codons, use ```--altcodons```.
 
 
 --altcodons ALTCODONS
 `````````````````````
 
-Use provided alternative start codons, comma seperated, e.g. ```--altcodons CTG,GTG,ACG```. Turn on ```--alt``` option. Do not need to provide 'ATG'. Do not support 'N' bases.
+Use provided alternative start codons, comma seperated, e.g. ```--altcodons CTG,GTG,ACG```. Turn on ```--alt``` option. Do not need to provide 'ATG'. It does not support 'N' bases.
 
 --tis2ribo
 ``````````
@@ -353,7 +353,7 @@ Use enrich test instead of frame test. Enrich test is rank sum test between in-f
 --nocompatible
 ``````````````
 
-Do not require reads compatible with transcript splice junctions. 
+Not require reads compatible with transcript splice junctions. 
 
 --minaalen MINAALEN
 ```````````````````
@@ -480,7 +480,7 @@ Predict result of group 1 & 2 TIS data. Comma seperated if there are more than 1
 -a TIS1BAMPATHS, -b TIS1BAMPATHS
 ````````````````````````````````
 
-Group 1 & 2 TIS riboseq bam files, comma seperated
+Group 1 & 2 TIS riboseq bam files, comma seperated.
 
 --l1 TIS1LABELS, --l2 TIS2LABELS
 ````````````````````````````````
@@ -495,7 +495,7 @@ Gene annotation file. Acceptable formats include gtf, gff, bed and genepred with
 -o OUTPUT
 `````````
 
-Output result file
+Output result file.
 
 
 --geneformat GENEFORMAT
@@ -512,7 +512,7 @@ Input P-site offset parameter files for group 1 & 2 bam files. The default param
 --nocompatible
 ``````````````
 
-Do not require reads compatible with transcript splice junctions. 
+Not require reads compatible with transcript splice junctions. 
 
 --normcomm
 ``````````
@@ -535,13 +535,13 @@ ID   count1 count2 ...
 
 Both gene ID and transcript ID are acceptable.
 
---scalefactor
-`````````````
+--scalefactor SCALEFACTOR
+`````````````````````````
 
 Input TIS scale factor of group 2/1 instead of auto calculate. Not log value.
 
---rnascale
-``````````
+--rnascale RNASCALE
+```````````````````
 
 Input RNASeq scale factor of group 2/1 instead of auto calculate. Not log value.
 

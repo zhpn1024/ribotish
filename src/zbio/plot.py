@@ -41,7 +41,7 @@ def plotTrans(t, ypos = 0, intv = None, r = [0.1, 0.3], color = 'blue',rid = -0.
 def save(filename):
   savefig(filename, transparent=True)
 
-def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = -1, scale = 1, col = ['r','g','b'], title = '', showlegend = False, showframe = True, bottom = 0.8, height = 0.1):
+def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col = ['r','g','b'], title = '', showlegend = False, showframe = True, bottom = 0.8, height = 0.1):
   '''plot riboseq profile
   '''
   if stop < start : stop = trans.cdna_length()
@@ -55,12 +55,12 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = -1, scale = 1, col = 
       i = p % 3
       lx[i].append(j)
       y = cnts[p] * scale
-      if ymax > 0 and y > ymax: y = ymax
+      if ymax is not None and ymax > 0 and y > ymax: y = ymax
       ly[i].append(y)
       if m < y : m = y
-  ylab = 'RPF Count'
-  if scale != 1 : ylab = 'Scaled RPF count'
-  if ymax < 0 : ymax = m
+  ylab = 'Count'
+  if scale != 1 : ylab = 'Scaled count'
+  if ymax is None or ymax < 0 : ymax = m
   for i in range(3):
     ax.bar(lx[i], ly[i], color=col[i], width=1, edgecolor=col[i], log=False, alpha=0.4, label='Frame '+str(i+1))
   
@@ -116,11 +116,11 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
     if not alt and len(o.starts) == 0 : continue
     if 0 <= o.stop <= start or o.start(alt=alt) >= stop : continue
     orf_s.append(o)
-    o1 = o.start() - start
+    o1 = o.start(alt=alt) - start
     if o1 < 0: o1 = 0
     lx[o.frame-1].append(o1) # (o.start(alt=alt) - start)
     if o.has_stop():
-      o2 = min(stop, o.stop) - max(o.start(), start)
+      o2 = min(stop, o.stop) - max(o.start(alt=alt), start)
     else:
       o2 = stop - max(o.start(), start)
     ly[o.frame-1].append(o2)
