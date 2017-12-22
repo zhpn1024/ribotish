@@ -2,6 +2,8 @@
 
 	Change chisqprob to chi2.sf since chisqprob was deprecated in newer versions of scipy.
 
+	Update NegBinom test pvalue function, more accurate and faster.
+
 	Update GTF attribute extracting function.
 
 	Update tisdiff R scrpts to allow non tab seperators.

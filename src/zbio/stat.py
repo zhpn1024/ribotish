@@ -6,7 +6,7 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 import math
 from scipy.stats import nbinom, chisquare # chisqprob
 from scipy.stats import chi2
-from scipy.special import betaln
+from scipy.special import betaln, betainc
 logarr = [None] # log(N)
 logsumarr = [0] # log(N!)
 def logarr_ext(n) : #, logarr = logarr, logsumarr = logsumarr): # prepare log values
@@ -239,9 +239,12 @@ class NegBinom:
     return nbinom.cdf(k, self.r, self.p)
   def pvalue(self, k = 0, record = True):
     if record : 
-      key = (self.p, self.q)
+      key = (self.r, self.p)
       if key not in self.p_record : self.p_record[key] = {}
       elif k in self.p_record[key] : return self.p_record[key][k]
+    if k == 0: p = 1
+    else: p = betainc(k, self.r, self.q)
+    '''
     p = 1 - nbinom.cdf(k-1, self.r, self.p)
     if p > self.Delta : 
       if record : self.p_record[key][k] = p
@@ -258,7 +261,7 @@ class NegBinom:
       ka += 1
       pa = nbinom.pmf(ka, self.r, self.p)
       p += pa
-    #p += pa
+    #p += pa'''
     if record : self.p_record[key][k] = p
     return p
       
