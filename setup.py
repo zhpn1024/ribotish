@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#Last-modified: 22 Mar 2017
+#Last-modified: 22 Dec 2017
 
 #         Module/Scripts Description
 # 
@@ -9,8 +9,8 @@
 # under the terms of the BSD License (see the file COPYING included with
 # the distribution).
 # 
-# @status:  experimental
-# @version: 0.1.9
+# @status:  Alpha
+# @version: 0.1.10
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 
@@ -45,13 +45,12 @@ if __name__ == '__main__':
     # includepy = "%s/include/python%s" % (sys.prefix, sys.version[:3])
     with open("README.rst",'r') as fh:
         long_description = fh.read()
-    # ngslib version
+    # version
     from src import __version__ as VERSION
     PROG = 'ribotish'
     #with open('RELEASE','r') as fh:
         #PROG, VERSION = fh.next().split()[:2]
 
-    # Compile Kent lib
     if 'clean' in sys.argv:
         print >>sys.stderr, "Clean dist and egg info ..."
         os.system('if [ -d dist ]; then rm -rf dist; fi')
@@ -87,6 +86,7 @@ if __name__ == '__main__':
                        'License :: Free for non-commercial use',
                        'Operating System :: Unix',
                        'Programming Language :: Python :: 2.7',
+                       'Programming Language :: Python :: 3',
                        'Topic :: Scientific/Engineering :: Bio-Informatics'],
           install_requires=install_requires)
 

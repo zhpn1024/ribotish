@@ -1,3 +1,13 @@
+2017-12-22 ribotish 0.1.10
+
+	Change chisqprob to chi2.sf since chisqprob was deprecated in newer versions of scipy.
+
+	Update GTF attribute extracting function.
+
+	Update tisdiff R scrpts to allow non tab seperators.
+
+	Update docs, especially for python3. Ribo-TISH codes are compatible with both python2.7 and python3.
+
 2017-9-15 ribotish 0.1.9
 
 	Add --colorblind option in quality to generate another color style readable for color blind people.

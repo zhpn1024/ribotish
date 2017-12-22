@@ -9,7 +9,7 @@ Prerequisites
 
 Python version must be >= *2.7*.
 
-Ribo-TISH can run on python3, but not extensively tested.
+Ribo-TISH can run on python3, but extensive tests are not performed yet.
 
 :Pysam_: >= 0.8.3
 :Scipy_: >= 0.15.1
@@ -19,7 +19,7 @@ Ribo-TISH can run on python3, but not extensively tested.
 .. _Scipy: http://www.scipy.org/Download
 .. _Matplotlib: http://matplotlib.org/users/installing.html
 
-Ribo-TISH cannot run on Windows because Pysam_ do not support Windows installation.
+Ribo-TISH cannot run on Windows because Pysam_ does not support Windows installation.
 
 Easy installation through PyPI
 ==============================

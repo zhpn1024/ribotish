@@ -4,7 +4,8 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 
 import math
-from scipy.stats import nbinom, chisquare, chisqprob
+from scipy.stats import nbinom, chisquare # chisqprob
+from scipy.stats import chi2
 from scipy.special import betaln
 logarr = [None] # log(N)
 logsumarr = [0] # log(N!)
@@ -47,7 +48,7 @@ def fisher_method(ps):
     if p == 0 : return 0.0, -1 ###
     fs += - 2 * math.log(p)
     n += 1
-  fp = chisqprob(fs, 2 * n)
+  fp = chi2.sf(fs, 2 * n) # chisqprob(fs, 2 * n)
   return fp, fs
 
 def combination_log(n, k, show = False): 

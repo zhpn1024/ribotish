@@ -62,7 +62,9 @@ class Exon:
     if p1 < 0 : return ''
     else : p1 += len(key) + 1
     p2 = s.find(';', p1)
-    return eval(s[p1:p2])
+    if p2 == -1 : p2 = None
+    try: return eval(s[p1:p2])
+    except: return s[p1:p2]
   @property
   def length(self):
     return len(self)
