@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.1.10)
 ==================================
-<2017-12-22 Peng Zhang>
+<2018-1-11 Peng Zhang>
 
 Introduction
 ============
@@ -423,6 +423,12 @@ Report ORF sequences.
 ````````
 
 Report amino acid sequences.
+
+
+--blocks
+````````
+
+Report all exon block positions for predicted ORF
 
 Output files
 ------------

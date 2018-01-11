@@ -433,7 +433,7 @@ class gtfTrans(Exon):
     return False
   def genome_pos(self, p, bias = 1):
     '''if bias is 1, the splice junction will be mapped to 5' end of downstream exon,
-    if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
+    :if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
     '''
     m = self.cdna_length()
     if p < 0 or p > m: return None
@@ -463,9 +463,10 @@ class gtfGene(Exon):
     self.trans = []
     #self.type = lst[1]
   def add_trans(self, tr):
-    if tr.strand != self.strand :
+    if self.strand in ('+', '-') and tr.strand != self.strand :
       print('Inconsistent trans strand: {} {} {} {}'.format(tr.gid, tr.tid, tr.strand, self.strand))
       #tr.strand = self.strand
+      self.strand = '.'
     self.trans.append(tr)
     #self.check()
   def __repr__(self):

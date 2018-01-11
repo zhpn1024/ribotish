@@ -585,7 +585,7 @@ class BamLoadChr:
   def transCounts(self, trans, compatible = False, mis = 2):
     if self.strand != '.' and self.strand != trans.strand :
       print('Strand not match: {}, {}'.format(self, trans.id))
-      return
+      return []
     d = self.data[trans.strand]
     if compatible : 
       from . import interval

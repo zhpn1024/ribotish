@@ -44,6 +44,7 @@ def set_parser(parser):
   parser.add_argument("--longest", action="store_true", help="Only report longest possible ORF results")
   parser.add_argument("--seq", action="store_true", help="Report ORF sequences")
   parser.add_argument("--aaseq", action="store_true", help="Report amino acid sequences")
+  parser.add_argument("--blocks", action="store_true", help="Report all exon block positions for predicted ORF")
   # Reads filters
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
@@ -67,8 +68,8 @@ def run(args):
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible, compatiblemis
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
   global tpth, fpth, minpth, fspth, framebest, framelocalbest, longest, transprofile, TIS_types #fspth
-  global paired, seq, aaseq # showtime
-  paired, seq, aaseq = args.paired, args.seq, args.aaseq
+  global paired, seq, aaseq, blocks # showtime
+  paired, seq, aaseq, blocks = args.paired, args.seq, args.aaseq, args.blocks
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   tisbampaths = args.tisbampaths
   ribobampaths = args.ribobampaths
@@ -179,12 +180,13 @@ def run(args):
       if g.chr not in cds_regions :
         cds_regions[g.chr] = {'+':[interval.Interval() for i in range(3)], '-':[interval.Interval() for i in range(3)]}
         known_tis[g.chr] = {'+':{}, '-':{}}
-      cr = interval.cds_region_gene(g)
-      for i in range(3) :
-        cds_regions[g.chr][g.strand][i].lst += cr[i].lst
-      for t in g.trans :
+      for t in g.trans:
+        cr = interval.cds_region_trans(t)
+        for i in range(3) :
+          cds_regions[t.chr][t.strand][i].lst += cr[i].lst
+      #for t in g.trans :
         tis = t.cds_start(cdna = False)
-        if tis is not None : known_tis[g.chr][g.strand][tis] = 1
+        if tis is not None : known_tis[t.chr][t.strand][tis] = 1
 
   inorf = None
   if args.input is not None :
@@ -236,12 +238,13 @@ def run(args):
     if g.chr not in cds_regions : 
       cds_regions[g.chr] = {'+':[interval.Interval() for i in range(3)], '-':[interval.Interval() for i in range(3)]}
       known_tis[g.chr] = {'+':{}, '-':{}}
-    cr = interval.cds_region_gene(g)
-    for i in range(3) :
-      cds_regions[g.chr][g.strand][i].lst += cr[i].lst
-    for t in g.trans : 
+    for t in g.trans:
+      cr = interval.cds_region_trans(t)
+      for i in range(3) :
+        cds_regions[t.chr][t.strand][i].lst += cr[i].lst
+    #for t in g.trans : 
       tis = t.cds_start(cdna = False)
-      if tis is not None : known_tis[g.chr][g.strand][tis] = 1
+      if tis is not None : known_tis[t.chr][t.strand][tis] = 1
 
   for chr in cds_regions :
     for strand in cds_regions[chr] :
@@ -273,6 +276,7 @@ def run(args):
   s += '\tFisherPvalue\tTISQvalue\tFrameQvalue\tFisherQvalue\tAALen'
   if seq : s += '\tSeq'
   if aaseq : s += '\tAASeq'
+  if blocks: s += '\tBlocks'
   s += '\n'
   outfile.write(s)
 
@@ -292,6 +296,7 @@ def run(args):
     s = "%s\t%d" % (e, e.length)
     if seq : s += '\t' + e.sq
     if aaseq : s += '\t' + e.aa
+    if blocks: s += '\t' + e.blocks
     s += '\n'
     if allout is not None : allout.write(s)
     if e.q <= args.fsqth : outfile.write(s) # "%s\t%d\n" % (e, e.length)) #, e.sq))
@@ -478,6 +483,9 @@ def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   if not has_stop : e.length += 1
   if seq : e.sq = tsq[tis:stop]
   if aaseq : e.aa = orf.translate(e.sq)
+  if blocks: 
+    oi = interval.trans2interval(t, tis, stop)
+    e.blocks = ','.join(['{}-{}'.format(r[0],r[1]) for r in oi.lst]) 
   e.chr, e.strand, e.tistype = t.chr, t.strand, tistype
   e.gtis, e.gstop = gtis, gstop
   if tistype == 2 : e.cr = interval.cds_region_trans(t, tis, tis+3) # Extended TIS region

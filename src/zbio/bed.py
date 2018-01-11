@@ -577,13 +577,17 @@ class gpdGene:
   def __init__(self, id = '', b = None):
     if b is None :
       self.trans = []
-      self.chr, self.start, self.stop, self.strand = '', None, None, '.'
+      self.chr, self.start, self.stop, self.strand = '', None, None, ''
       self.id = id
     else : 
       self.trans = [b]
       self.chr, self.start, self.stop, self.strand = b.chr, b.start, b.stop, b.strand
       self.id = b.gid
   def add_trans(self, tr):
+    if self.strand in ('+', '-') and tr.strand != self.strand :
+      print('Inconsistent trans strand: {} {} {} {}'.format(tr.gid, tr.tid, tr.strand, self.strand))
+      self.strand = '.'
+    elif self.strand == '': self.strand = tr.strand
     self.trans.append(tr)
   def __repr__(self):
     s = "gene_id " + self.id + ', ' + str(len(self.trans)) + " transcripts, " + Exon.__repr__(self)
@@ -593,7 +597,7 @@ class gpdGene:
   def check(self):
     if len(self.trans) > 0 :
       if self.chr == '' : self.chr = self.trans[0].chr
-      if self.trand == '.' : self.strand = self.trans[0].strand
+      if self.trand == '' : self.strand = self.trans[0].strand
       if self.start is None : self.start, self.stop = self.trans[0].start, self.trans[0].stop
     for t in self.trans:
       #t.check()
