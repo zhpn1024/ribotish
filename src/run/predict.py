@@ -231,7 +231,7 @@ def run(args):
     j[1] += ji[1]
     for e in es : 
       profile.add_exp(e)
-      if verbose >= 2 : print e
+      if verbose >= 2 : print('{} {}'.format(time.ctime(), str(e)))
     if transprofile is not None : 
       for tid in tpfs :
         tpfile.write(io.tabjoin(tid, tpfs[tid])+'\n')
@@ -385,7 +385,7 @@ def _pred_gene(ps): ### trans
 
     score = ttis.abdscore()
     ip = ribo.pidx(score, slp)   
-    if verbose >= 2 : print g.id, t.id, ttis.total, tribo.total
+    if verbose >= 2 : print(io.tabjoin(g.id, t.id, ttis.total, tribo.total))
     cds1 = t.cds_start(cdna = True) 
     cds2 = t.cds_stop(cdna = True) 
     tsq = genome.transSeq(t)
