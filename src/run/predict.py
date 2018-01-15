@@ -44,7 +44,7 @@ def set_parser(parser):
   parser.add_argument("--longest", action="store_true", help="Only report longest possible ORF results")
   parser.add_argument("--seq", action="store_true", help="Report ORF sequences")
   parser.add_argument("--aaseq", action="store_true", help="Report amino acid sequences")
-  parser.add_argument("--blocks", action="store_true", help="Report all exon block positions for predicted ORF")
+  parser.add_argument("--blocks", action="store_true", help="Report all exon block positions for predicted ORFs")
   # Reads filters
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")

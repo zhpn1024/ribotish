@@ -1,3 +1,9 @@
+2018-1-15 ribotish 0.1.11
+
+	Update codes to allow genes with transcripts in different strands in chromosome.
+
+	Add --blocks option to report all exon block positions for predicted ORFs.
+
 2017-12-22 ribotish 0.1.10
 
 	Change chisqprob to chi2.sf since chisqprob was deprecated in newer versions of scipy.

@@ -428,7 +428,7 @@ Report amino acid sequences.
 --blocks
 ````````
 
-Report all exon block positions for predicted ORF
+Report all exon block positions for predicted ORFs. Format: start1-stop1,start2-stop2,...startN-stopN. In chromosome direction.
 
 Output files
 ------------

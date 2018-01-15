@@ -433,7 +433,7 @@ class gtfTrans(Exon):
     return False
   def genome_pos(self, p, bias = 1):
     '''if bias is 1, the splice junction will be mapped to 5' end of downstream exon,
-    :if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
+    if bias is 0, the splice junction will be mapped to 3' end of the upstream exon.
     '''
     m = self.cdna_length()
     if p < 0 or p > m: return None

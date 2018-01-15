@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#Last-modified: 22 Dec 2017
+#Last-modified: 15 Jan 2018
 
 #         Module/Scripts Description
 # 
@@ -10,7 +10,7 @@
 # the distribution).
 # 
 # @status:  Alpha
-# @version: 0.1.10
+# @version: 0.1.11
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 
