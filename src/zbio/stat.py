@@ -783,13 +783,13 @@ class rankSumTiesExact:
     '''
     s = sum([v**3 - v for v in self.cd.values() if v > 1])
     return s / float(self.N ** 3 - self.N)
-  def test(self, th = 20, delta = 1e-4):
+  def test(self, th = 10, delta = 1e-4):
     '''if either size <= th, use fastTest
     elif complexity <= th, use fastTest
     else use normal mwtest
     '''
     if self.n <= th or self.N - self.n <= th : return self.fastTest(delta = delta) #, True
-    if self.complexity() <= th * logarr[2] : return self.fastTest(delta = delta) #, True
+    if self.complexity() <= th: return self.fastTest(delta = delta) # * logarr[2]
     return self.mwtest() #, False
   def mwtest(self, use_continuity = True, show = False):
     '''normal mwtest, alt = greater, one-tailed

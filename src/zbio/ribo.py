@@ -3,7 +3,7 @@ Main library for riboseq analysis in zbio/ribotish
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 import itertools, math
-import stat, bam, gtf, exp, orf, tools, io, fa, interval
+from . import stat, bam, gtf, exp, orf, tools, io, fa, interval
 from multiprocessing import Pool
 
 codonSize = 3
@@ -163,7 +163,7 @@ class Ribo:
   def multi_orf_test(self, orflist, glm = False): 
     '''multiple ORF detection for riboseq data, not used in final version
     '''
-    import interval
+    from . import interval
     tid = self.trans.id
     blank = []
     for i in range(codonSize): ## Blank regions in different frames
@@ -243,7 +243,7 @@ class Ribo:
   def max_orf(self, orf, blank): 
     '''for ribonly_orf_finder
     '''
-    import interval
+    from . import interval
     indr = indep_region(orf, blank)
     mst, mp = None, 1
     for st in orf.sts :
@@ -258,7 +258,7 @@ class Ribo:
     '''find likely TIS by only riboseq data, not used, similar function in pvalStatus()
     However, this function seems better
     '''
-    import interval
+    from . import interval
     blank = []
     for i in range(codonSize): ## Blank regions in different frames
       b = interval.Interval(start=self.nhead, stop=self.length-self.ntail)

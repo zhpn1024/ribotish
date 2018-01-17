@@ -31,16 +31,16 @@ def transIter(filePath, fileType = 'auto', gz = False, **kwargs):
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
-    import bed
+    from . import bed
     return bed.bed12_iter(infile, **kwargs)
   elif fileType == 'gtf' :
-    import gtf
+    from . import gtf
     return gtf.gtftrans_iter(infile, **kwargs)
   elif fileType == 'gff' :
-    import gtf
+    from . import gtf
     return gtf.gtftrans_iter(infile, gff = True, **kwargs)
   elif fileType == 'gpd' :
-    import bed
+    from . import bed
     return bed.gpd_iter(infile, **kwargs)
   else : raise IOError('Unknown trans file type: {}'.format(fileType))
 
@@ -57,13 +57,13 @@ def geneIter(filePath, fileType = 'auto', gz = False, **kwargs):
     import bed
     return bed.bed12_iter(infile, **kwargs)
   elif fileType == 'gtf' :
-    import gtf
+    from . import gtf
     return gtf.gtfgene_iter(infile, **kwargs)
   elif fileType == 'gff' :
-    import gtf
+    from . import gtf
     return gtf.gtfgene_iter(infile, gff = True, **kwargs)
   elif fileType == 'gpd' :
-    import bed
+    from . import bed
     return bed.gpdGeneIter(infile, **kwargs)
   else : raise IOError('Unknown trans file type: {}'.format(fileType))
 
@@ -78,18 +78,18 @@ def transFetch(filePath, tid, fileType = 'auto', gz = False, **kwargs):
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
-    import bed
+    from . import bed
     return bed.bed12_fetch(infile, id = tid, **kwargs)
   elif fileType == 'gtf' :
-    import gtf
+    from . import gtf
     gene, trans = gtf.fetch_gtf(infile, tid = tid, **kwargs)
     return trans[tid]
   elif fileType == 'gff' :
-    import gtf
+    from . import gtf
     gene, trans =  gtf.fetch_gtf(infile, tid = tid, gff = True, **kwargs)
     return trans[tid]
   elif fileType == 'gpd' :
-    import bed
+    from . import bed
     return bed.gpd_fetch(infile, id = tid, **kwargs)
   else : raise IOError('Unknown trans file type: {}'.format(fileType))
   
@@ -103,16 +103,16 @@ def transSelectIter(filePath, fileType = 'auto', gz = False,  **kwargs):
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
-    import bed
+    from . import bed
     return bed.bed12SelectIter(infile, **kwargs) # no gene name/id annotation
   elif fileType == 'gtf' :
-    import gtf
+    from . import gtf
     return gtf.gtftransSelectIter(infile, **kwargs)
   elif fileType == 'gff' :
-    import gtf
+    from . import gtf
     return gtf.gtftransSelectIter(infile, gff = True, **kwargs)
   elif fileType == 'gpd' :
-    import bed
+    from . import bed
     return bed.gpdSelectIter(infile, **kwargs)
   else : raise IOError('Unknown trans file type: {}'.format(fileType))
 

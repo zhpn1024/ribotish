@@ -3,7 +3,7 @@ Open reading frame (ORF) processing
 Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 
-import fa
+from . import fa
 
 codonSize = 3
 cstart = ['ATG']
