@@ -1,3 +1,9 @@
+2018-2-7 ribotish 0.2.0
+
+	Lower the threshold between fasttest and normal test to increase testing speed.
+
+	Some python3 compatibility updates.
+
 2018-1-15 ribotish 0.1.11
 
 	Update codes to allow genes with transcripts in different strands in chromosome.
