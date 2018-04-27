@@ -18,5 +18,7 @@ y <- estimateCommonDisp(y)
 y <- estimateTagwiseDisp(y)
 et <- exactTest(y)
 #topTags(et)
-write.table(et$table, file=outfile, quote=F, sep='\t')
+table <- et$table
+table$FDR <- p.adjust(table$PValue, method = "BH")
+write.table(table, file=outfile, quote=F, sep='\t')
 

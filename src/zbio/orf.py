@@ -214,6 +214,16 @@ AACodon = {'F':['TTC','TTT'], 'L':['CTG','CTC','CTT','TTG','TTA','CTA'], 'M':['A
 
 allcodons = list(codonTable.keys())
 
+codonFreqHuman = {'TTT':17.6, 'TTC':20.3, 'TTA':7.7,  'TTG':12.9, 'TCT':15.2, 'TCC':17.7, 'TCA':12.2, 'TCG':4.4,
+                  'TAT':12.2, 'TAC':15.3, 'TAA':1.0,  'TAG':0.8,  'TGT':10.6, 'TGC':12.6, 'TGA':1.6,  'TGG':13.2,
+                  'CTT':13.2, 'CTC':19.6, 'CTA':7.2,  'CTG':39.6, 'CCT':17.5, 'CCC':19.8, 'CCA':16.9, 'CCG':6.9,
+                  'CAT':10.9, 'CAC':15.1, 'CAA':12.3, 'CAG':34.2, 'CGT':4.5,  'CGC':10.4, 'CGA':6.2,  'CGG':11.4,
+                  'ATT':16.0, 'ATC':20.8, 'ATA':7.5,  'ATG':22.0, 'ACT':13.1, 'ACC':18.9, 'ACA':15.1, 'ACG':6.1,
+                  'AAT':17.0, 'AAC':19.1, 'AAA':24.4, 'AAG':31.9, 'AGT':12.1, 'AGC':19.5, 'AGA':12.2, 'AGG':12.0,
+                  'GTT':11.0, 'GTC':14.5, 'GTA':7.1,  'GTG':28.1, 'GCT':18.4, 'GCC':27.7, 'GCA':15.8, 'GCG':7.4,
+                  'GAT':21.8, 'GAC':25.1, 'GAA':29.0, 'GAG':39.6, 'GGT':10.8, 'GGC':22.2, 'GGA':16.5, 'GGG':16.5,
+              }
+
 def translate(seq):
   aa = ""
   for i in range(0, len(seq), codonSize):
@@ -264,7 +274,7 @@ def sense_mut1(seq, start, stop, cds1, cds2, n = 0) : # mutate any one base in a
 def base_mut(seq, start, stop, n = 0) : 
   if n >= (stop - start) * 4 : return None # exceed limit
   i = int((start + stop) / 2)
-  shift = n / 4 # 4 bases
+  shift = int(n / 4) # 4 bases
   if shift % 2 > 0 : i -= int(shift / 2) + 1
   else : i += int(shift / 2)
   bi = n % 4
@@ -286,6 +296,86 @@ def codon_mut(seq, start, stop, cds1, cds2, n = 0) : # pass
     #for j in range(max(start-i,0), min(i+3-stop,3)) : 
     newseq = seq[0:i] + c2 + seq[i+3:]
     return newseq, i, c2
+
+def senseMut2(seq, mutkey, cds1 = 0, cds2 = None) : # pass
+  if cds2 is None : cds2 = len(seq)
+  if type(mutkey) == str : keys = [mutkey]
+  else : keys = mutkey
+  seq = seq.upper()
+  change = {}
+  cands = {}
+  has_key = True
+  while has_key :
+    has_key = False
+    for key in keys :
+      p = seq.find(key)
+      while p >= 0 :
+        has_key = True
+        if p not in change : 
+          change[p] = 0
+          cands[p] = []
+        newseq = sense_mut2(seq, p, p+len(key), cds1, cds2, cands[p], change[p])
+        if newseq is None :
+          print('Cannot find sense mutation for {} at {} of {}!'.format(key, p, seq))
+          return None
+        i, c = cands[p][change[p]][1:3]
+        print('{} {} changed to {}, {}'.format(i, seq[i:i+len(c)], c, newseq))
+        seq = newseq #, i, c = mut
+        change[p] += 1
+        p = seq.find(key)
+  return seq
+
+def mutated_seq(seq, cand):
+  p, i, s = cand
+  l = len(s)
+  return seq[0:i] + s + seq[i+l:]
+
+def sense_mut2(seq, start, stop, cds1, cds2, candsarr, n = 0) : # mutate any one base in a region. n is time of retries.
+  #incds = True
+  if n > 0: 
+    if n < len(candsarr): return mutated_seq(seq, candsarr[n])
+    else: return None
+  if start >= cds2 or stop <= cds1 : # incds = False
+    return base_mut2(seq, start, stop, candsarr, 0)
+  else :
+    if cds1 > start:
+      base_mut2(seq, start, cds1, candsarr, 0) # upstream mutation
+    if stop > cds2:
+      base_mut2(seq, cds2, stop, candsarr, 0) # downstream mutation
+    codon_mut2(seq, start, stop, cds1, cds2, candsarr, 0) # codon mutation
+    return mutated_seq(seq, candsarr[0])
+
+def base_mut2(seq, start, stop, candsarr, n = 0, priority = -100):
+  if n >= (stop - start) * 4 : return None # exceed limit
+  if n > 0: return mutated_seq(seq, candsarr[n])
+  i0 = int((start + stop) / 2)
+  for i in range(start, stop):
+    dist = i - i0
+    if dist <= 0:
+      p = priority - dist*2
+    else:
+      p = priority + dist*2 + 1
+    for j in range(4):
+      candsarr.append((p+0.1*j, i, bases[j]))
+  candsarr.sort()
+  return mutated_seq(seq, candsarr[0])
+
+def codon_mut2(seq, start, stop, cds1, cds2, candsarr, n = 0, priority = 0):
+  if n > 0:
+    if n < len(candsarr): return mutated_seq(seq, candsarr[n])
+    else: return None
+  for i in range(cds1, cds2, 3) :
+    if i + 3 <= start : continue
+    if i >= stop : break
+    codon = seq[i:i+3]
+    if codon not in codonTable: continue ## not a codon?
+    aa = codonTable[codon]
+    aac = AACodon[aa]
+    for c in aac:
+      p = priority - codonFreqHuman[c]
+      candsarr.append((p, i, c))
+  candsarr.sort()
+  return mutated_seq(seq, candsarr[0])
 
 def is_start(seq, pos, alt = False, flank = 0):
   '''if start / alt start codon is nearby

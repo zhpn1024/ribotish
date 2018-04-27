@@ -40,11 +40,13 @@ class Interval:
     for itv in self.lst: l += itv[1] - itv[0]
     return l
   def __repr__(self):
-    s = 'interval '+ self.id + ':'
-    if len(self.lst) == 0 : s += ' empty!'
-    for itv in self.lst:
-      s += ' [{}, {})'.format(itv[0],itv[1])
-    return s
+    s = ['interval '+ self.id + ':']
+    if len(self.lst) == 0 : s.append('empty!')
+    #for itv in self.lst:
+    else: s += ['[{}, {})'.format(itv[0],itv[1]) for itv in self.lst]
+    return ' '.join(s)
+  def __str__(self):
+    return ','.join(['{}-{}'.format(itv[0],itv[1]) for itv in self.lst])
   def __getitem__(self, i): 
     return self.lst[i]
   def __add__(self, other): # do not change self

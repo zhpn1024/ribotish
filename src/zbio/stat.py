@@ -20,6 +20,9 @@ def logarr_ext(n) : #, logarr = logarr, logsumarr = logsumarr): # prepare log va
       #print i, logarr[i]
       logsumarr[i] = logsumarr[i-1] + logarr[i]
   return logarr, logsumarr
+def betainc1(a, b, x):
+  if a == 0: return 1
+  return betainc(a, b, x)
 def data_count(data):
   total, cnt = 0, 0
   for k in data:
@@ -164,7 +167,7 @@ def binom_log(n, k, p = 0.5, show = False): #log probability value
   lpr = math.log(p) * k + math.log(1-p) * (n-k)
   lpr += combination_log(n, k)
   return lpr
-def binom_test(n, k, p = 0.5, alt = "g", log = True, show=False): 
+def binom_test0(n, k, p = 0.5, alt = "g", log = True, show=False): 
   '''binomial test, no two sided yet!
   '''
   if not log : return binomTest0(n, k, p, alt, show) # if log, p are calculated with log values
@@ -188,6 +191,18 @@ def binom_test(n, k, p = 0.5, alt = "g", log = True, show=False):
       lpk += lq + logarr[i] - lp - logarr[n - i + 1] #r = q * i / p / (n - i + 1)
       pv += math.exp(lpk)
   return pv
+def binom_test(n, k, p = 0.5, alt = "g"):
+  if alt[0] == 'l':
+    return betainc1(n-k, k+1, 1-p)
+  elif alt[0] == 'g':
+    return betainc1(k, n-k+1, p)
+  else:
+    if k <= n * p:
+      pv = betainc1(n-k, k+1, 1-p)
+    else:
+      pv = betainc1(k, n-k+1, p)
+    return min(pv*2, 1)
+
 def binomTest0(n, k, p = 0.5, alt = "g", show=False): # No two sided yet!
   '''binomial test no log version
   '''
