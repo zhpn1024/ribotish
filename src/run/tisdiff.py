@@ -372,7 +372,7 @@ def _get_tis(ps) :
   offlist = tis1offdictlist + tis2offdictlist
   for i, pc in enumerate(pos_cnt) :
     if len(pc) == 0 : continue
-    ttis = ribo.multiRibo(t, bamlist[i], offlist[i], compatible = compatible, mis = compatiblemis, paired = paired)
+    ttis = ribo.multiRibo(t, bamlist[i], offdict=offlist[i], compatible=compatible, mis=compatiblemis, paired=paired)
     for pos in pc : pc[pos] = ttis.cnts[pos]
   return t.id, pos_cnt
 
