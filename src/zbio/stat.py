@@ -6,9 +6,11 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 import math
 from scipy.stats import nbinom, chisquare # chisqprob
 from scipy.stats import chi2
-from scipy.special import betaln, betainc
-logarr = [None] # log(N)
-logsumarr = [0] # log(N!)
+from scipy.special import betaln, betainc, gammaln
+#logarr = [None] # log(N)
+#logsumarr = [0] # log(N!)
+def logsum(n): # log(N!)
+  return gammaln(n+1)
 def logarr_ext(n) : #, logarr = logarr, logsumarr = logsumarr): # prepare log values
   global logarr, logsumarr
   l = len(logarr)
@@ -60,8 +62,8 @@ def combination_log(n, k, show = False):
   n, k = int(n), int(k)
   if n < 0 : return None
   if k > n or k < 0: return None #None is log(0)
-  logarr_ext(n)
-  lpr = logsumarr[n] - logsumarr[k] - logsumarr[n-k]
+  #logarr_ext(n)
+  lpr = logsum(n) - logsum(k) - logsum(n-k) # logsumarr[n] - logsumarr[k] - logsumarr[n-k]
   return lpr
 
 def ACprob(x, y, r = 1): 
@@ -108,6 +110,8 @@ def hypergeo_log(N, K, n, k):
   return combination_log(K, k) + combination_log(N-K, n-k) - combination_log(N, n)
 
 def hypergeo(N, K, n, k):
+  if k < 0 or k < K+n-N: return 0
+  if k > n or k > K: return 0
   lp = hypergeo_log(N, K, n, k)
   if lp is None : return 0
   return math.exp(lp)
@@ -184,11 +188,11 @@ def binom_test0(n, k, p = 0.5, alt = "g", log = True, show=False):
   lq = math.log(q)
   if alt[0] == 'g':
     for i in range(k, n):
-      lpk += lp + logarr[n - i] - lq - logarr[i + 1] #r = p * (n - i) / q / (i + 1)
+      lpk += lp + math.log(n - i) - lq - math.log(i + 1) #r = p * (n - i) / q / (i + 1)
       pv += math.exp(lpk)
   else:
     for i in range(k, 0, -1):
-      lpk += lq + logarr[i] - lp - logarr[n - i + 1] #r = q * i / p / (n - i + 1)
+      lpk += lq + math.log(i) - lp - math.log(n - i + 1) #r = q * i / p / (n - i + 1)
       pv += math.exp(lpk)
   return pv
 def binom_test(n, k, p = 0.5, alt = "g"):
@@ -585,14 +589,14 @@ class Poisson:
     return lpr
   def pmf(self, k = 0):
     return math.exp(self.logpmf(k))
-  def cdf(self, k = 0, logarr = logarr):
+  def cdf(self, k = 0): #, logarr = logarr):
     if k < 0 : return 0
-    logarr_ext(k)
+    #logarr_ext(k)
     lpr = self.logpmf(0)
     logl = math.log(self.l)
     cdf = math.exp(lpr)
     for i in range(1, k + 1):
-      lpr += logl - logarr[i]
+      lpr += logl - math.log(i) # logarr[i]
       cdf += math.exp(lpr)
     return cdf
   def pvalue(self, k = 0):
@@ -647,14 +651,14 @@ class ZTPoisson(Poisson):
     return lp - math.log(1 - p0)
   #def pmf(self, k = 0):
     #return math.exp(self.logpmf(k))
-  def cdf(self, k = 1, logarr = logarr):
+  def cdf(self, k = 1): #, logarr = logarr):
     if k <= 0 : return 0
-    logarr_ext(k)
+    #logarr_ext(k)
     lpr = self.logpmf(1)
     logl = math.log(self.l)
     cdf = math.exp(lpr)
     for i in range(2, k + 1):
-      lpr += logl - logarr[i]
+      lpr += logl - math.log(i) # logarr[i]
       cdf += math.exp(lpr)
     return cdf
   #def pvalue(self, k = 0):
@@ -747,8 +751,8 @@ class rankSumTiesExact:
   def complexity(self):
     '''sum of log(n+1) for each ties
     '''
-    logarr_ext(max(self.cd.values()) + 1)
-    complog = sum([logarr[self.count(i)+1] for i in range(self.l)])
+    #logarr_ext(max(self.cd.values()) + 1)
+    complog = sum([math.log(self.count(i)+1) for i in range(self.l)])
     return complog
   def shuffleTest(self, n = 1000, show = False):
     import random
@@ -769,7 +773,7 @@ class rankSumTiesExact:
   def rank(self, i):
     return self.rd[self.ks[i]]
   def numStats(self):
-    logarr_ext(max(self.cd.values()) + 1)
+    #logarr_ext(max(self.cd.values()) + 1)
     return self._numStats(self.N, self.n, 0)
   def _numStats(self, N, n, i): # NOT CORRECT!!
     n1 = N - n
@@ -779,7 +783,7 @@ class rankSumTiesExact:
     if max(self.vs[i:]) == 1 : return math.exp(combination_log(N,n))
     t1, t2 = self.count(i), N - self.count(i)
     if t1 >= n >= t2 or t1 >= n1 >= t2 : 
-      d = math.exp(sum([logarr[self.count(k)+1] for k in range(i+1, self.l)]))
+      d = math.exp(sum([math.log(self.count(k)+1) for k in range(i+1, self.l)]))
       return d
       #print 'multi all', d, N, n, i
     s = 0

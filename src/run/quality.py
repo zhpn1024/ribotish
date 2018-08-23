@@ -224,7 +224,7 @@ def stdisplot(ax, x, y, lab = '', hali = 'left', vali = 'top', frame = 3, f0 = 0
   ax.spines['right'].set_visible(False)
   ax.spines['top'].set_visible(False)
   ax.spines['left'].set_visible(False)
-  ax.tick_params(direction='in', top = 'off', right = 'off')
+  ax.tick_params(direction='in', top = False, right = False)
   ax.set_yticks([0, ty])
   ax.set_yticklabels([0,numk(ty)])
 def cdsplot(ax, disc):
@@ -242,7 +242,7 @@ def formatax(ax):
   ax.spines['right'].set_visible(False)
   ax.spines['top'].set_visible(False)
   ax.spines['left'].set_visible(False)
-  ax.tick_params(direction='in', top = 'off', right = 'off')
+  ax.tick_params(direction='in', top = False, right = False)
 
 
 def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):

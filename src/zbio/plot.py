@@ -103,7 +103,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col 
   for i in range(3):
     ax.bar(fx[i], fy[i], color=col[i], bottom = ymax * bottom,width=fw[i], alpha=0.2, linewidth = 0)
   
-def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Potential ORFs in 3 reading frames', alt = True):
+def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Potential ORFs in 3 reading frames', alt = True, morecds = None):
   '''plot possible ORFs
   '''
   if stop < start : stop = trans.cdna_length()
@@ -136,6 +136,16 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
     if cds[1] > stop: newcds[1] = rlen
     ax.text(max(newcds[0],0), 2-i+0.8, 'Annotated ORF', color=col[i])
     ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2)
+  if morecds is not None:
+    for mc in morecds:
+      if mc[0]>stop or mc[1]< start: continue
+      i = mc[0] % 3
+      newcds = [c - start for c in mc]
+      if newcds[0] < 0: newcds[0] = 0
+      if mc[1] > stop: newcds[1] = rlen
+      #ax.text(newcds[0], 2-i+0.8, 'Annotated ORF', color=col[i])
+      ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2)
+
   # start & stop codons
   lx = [[],[],[]]
   ly = [[],[],[]]
