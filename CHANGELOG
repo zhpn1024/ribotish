@@ -1,3 +1,9 @@
+2018-9-6 ribotish 0.2.1
+
+	Tisdiff bug fix
+
+	Update log factorial calculation
+
 2018-2-7 ribotish 0.2.0
 
 	Lower the threshold between fasttest and normal test to increase testing speed.
