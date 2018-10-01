@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.2.1)
 ==================================
-<2018-2-7 Peng Zhang>
+<2018-10-2 Peng Zhang>
 
 Introduction
 ============
@@ -32,7 +32,7 @@ There are 3 functions available as sub-commands.
 :predict:	Main function to predict ORF/TIS.
 :tisdiff:	Call diffential TIS between two TIS data
 
-The main input data should be in bam file format. Reads should be trimmed and aligned to genome. Intron splicing is supported. Some attributes are needed such as NM, NH and MD. For STAR, ```--outSAMattributes All``` should be set. bam file should be sorted and indexed by samtools_.
+The main input data should be in bam file format. Reads should be trimmed and aligned to genome using end-to-end mode (no soft-clip). Intron splicing is supported. Some attributes are needed such as NM, NH and MD. For STAR, ```--outSAMattributes All``` should be set. bam file should be sorted and indexed by samtools_.
 
 All positions or regions reported by Ribo-TISH are 0 based, half open, same as in bed_ format.
 
