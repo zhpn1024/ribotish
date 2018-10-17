@@ -142,7 +142,7 @@ def qualityPlot(args):
 
   ax = plot.subplot(gs0[0, 0])
   x1 = [l - 0.4 for l in lendis.keys()]
-  ax.bar(x1, lendis.values(), alpha=0.6)
+  ax.bar(x1, lendis.values(), alpha=0.6, align='edge')
   formatax(ax)
   ty = nearest(max(lendis.values()+[1]), up=False)
   ax.set_yticks([0, ty])
@@ -152,7 +152,7 @@ def qualityPlot(args):
   if m0 : 
     ax = plot.subplot(gs0[0, 1])
     x1 = [l - 0.4 for l in lendism0.keys()]
-    ax.bar(x1, lendism0.values(), alpha=0.6)
+    ax.bar(x1, lendism0.values(), alpha=0.6, align='edge')
     formatax(ax)
     ty = nearest(max(lendism0.values()+[1]), up=False)
     ax.set_yticks([0, ty])
@@ -216,7 +216,7 @@ def frange(start=0,stop=1,step=1):
 def stdisplot(ax, x, y, lab = '', hali = 'left', vali = 'top', frame = 3, f0 = 0, color = ['r','g','b'], size='medium', tcol = 'k'):
   for i in range(frame):
     i0 = (f0 + i) % frame
-    ax.bar(x[i0::frame], y[i0::frame], width = 0.6, color = color[i], edgecolor = color[i],alpha=0.6)
+    ax.bar(x[i0::frame], y[i0::frame], width = 0.6, color = color[i], edgecolor = color[i],alpha=0.6, align='edge')
   if hali == 'left' : tx = min(x)
   else : tx = max(x)
   ty = nearest(max(y+[1]), up=False) ##
@@ -251,7 +251,7 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
   if ys > 0 : y = [float(n)/ys for n in y0]
   else : y = y0
   ax0 = plot.subplot(gs[i, start])
-  ax0.bar(frange(0.2, len(y)), y, width = 0.6, color = fbcols, edgecolor = fbcols, alpha=0.6)
+  ax0.bar(frange(0.2, len(y)), y, width = 0.6, color = fbcols, edgecolor = fbcols, alpha=0.6, align='edge')
   use, frame, txt = ribo.quality(y, threshold = args.th)
   ax0.text(3.1 ,0.9 ,txt, horizontalalignment= 'right',verticalalignment='top', color='k')
   formatax(ax0)

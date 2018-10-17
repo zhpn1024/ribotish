@@ -34,8 +34,8 @@ def plotTrans(t, ypos = 0, intv = None, r = [0.1, 0.3], color = 'blue',rid = -0.
     for ei in e.intersect(orf): # CDS
       x[1].append(ei.start)
       y[1].append(len(ei))
-  bar(x[0],[r[0]*2]*len(x[0]),width=y[0],bottom=ypos-r[0],edgecolor=color,color=color)
-  bar(x[1],[r[1]*2]*len(x[1]),width=y[1],bottom=ypos-r[1],edgecolor=color,color=color)
+  bar(x[0],[r[0]*2]*len(x[0]),width=y[0],bottom=ypos-r[0],edgecolor=color,color=color, align='edge')
+  bar(x[1],[r[1]*2]*len(x[1]),width=y[1],bottom=ypos-r[1],edgecolor=color,color=color, align='edge')
   text((t.start+t.stop)//2, ypos+rid, t.id)
 
 def save(filename):
@@ -62,7 +62,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col 
   if scale != 1 : ylab = 'Scaled count'
   if ymax is None or ymax < 0 : ymax = m
   for i in range(3):
-    ax.bar(lx[i], ly[i], color=col[i], width=1, edgecolor=col[i], log=False, alpha=0.4, label='Frame '+str(i+1))
+    ax.bar(lx[i], ly[i], color=col[i], width=1, edgecolor=col[i], log=False, alpha=0.4, label='Frame '+str(i+1), align='edge')
   
   [ax.spines[side].set_visible(False) for side in ('right','top','bottom')]
   ax.yaxis.set_ticks_position('left')
@@ -101,7 +101,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col 
       fy[i].append(ymax * 0.1)
       fw[i].append(tw)
   for i in range(3):
-    ax.bar(fx[i], fy[i], color=col[i], bottom = ymax * bottom,width=fw[i], alpha=0.2, linewidth = 0)
+    ax.bar(fx[i], fy[i], color=col[i], bottom = ymax * bottom,width=fw[i], alpha=0.2, linewidth = 0, align='edge')
   
 def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Potential ORFs in 3 reading frames', alt = True, morecds = None):
   '''plot possible ORFs
@@ -127,7 +127,7 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
     #if o.has_stop(): ly[o.frame-1].append(o.stop-o.start(alt=alt))
     #else : ly[o.frame-1].append(rlen)
   for i in range(3):
-    ax.bar(lx[i], [0.2]*len(lx[i]), color=col[i], bottom=2-i+0.4, width=ly[i], alpha=0.4, linewidth=0)
+    ax.bar(lx[i], [0.2]*len(lx[i]), color=col[i], bottom=2-i+0.4, width=ly[i], alpha=0.4, linewidth=0, align='edge')
   # annotated ORF
   if cds[0] is not None and not (cds[0]>stop or cds[1]< start): 
     i = cds[0] % 3
@@ -135,7 +135,7 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
     if newcds[0] < 0: newcds[0] = 0
     if cds[1] > stop: newcds[1] = rlen
     ax.text(max(newcds[0],0), 2-i+0.8, 'Annotated ORF', color=col[i])
-    ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2)
+    ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2, align='edge')
   if morecds is not None:
     for mc in morecds:
       if mc[0]>stop or mc[1]< start: continue
@@ -144,7 +144,7 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
       if newcds[0] < 0: newcds[0] = 0
       if mc[1] > stop: newcds[1] = rlen
       #ax.text(newcds[0], 2-i+0.8, 'Annotated ORF', color=col[i])
-      ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2)
+      ax.bar(newcds[0], [0.4] ,color=col[i], bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.3, edgecolor=col[i], linewidth=2, align='edge')
 
   # start & stop codons
   lx = [[],[],[]]
@@ -155,10 +155,10 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
     if alt : ly[o.frame-1] += [s - start for s in o.altstarts if start<=s<stop] # orf.altstarts
     if o.has_stop() and start<=o.stop-3<stop: lz[o.frame-1] += [o.stop - 3 - start]
   for i in range(3):
-    ax.bar(ly[i], [0.4]*len(ly[i]), color='yellow', bottom=2-i+0.3, width=3, alpha=0.6, edgecolor='yellow')
-    ax.bar(lx[i], [0.4]*len(lx[i]), color='lime', bottom=2-i+0.3, width=3, alpha=1, edgecolor='lime')
-    ax.bar(lx[i], [0.04]*len(lx[i]), color='w', bottom=2-i+0.48, width=3, edgecolor='w')
-    ax.bar(lz[i], [0.4]*len(lz[i]), color='red', bottom=2-i+0.3, width=3, alpha=1, edgecolor='red')
-    ax.bar(lz[i], [0.04]*len(lz[i]), color='k', bottom=2-i+0.48, width=3, edgecolor='k')
+    ax.bar(ly[i], [0.4]*len(ly[i]), color='yellow', bottom=2-i+0.3, width=3, alpha=0.6, edgecolor='yellow', align='edge')
+    ax.bar(lx[i], [0.4]*len(lx[i]), color='lime', bottom=2-i+0.3, width=3, alpha=1, edgecolor='lime', align='edge')
+    ax.bar(lx[i], [0.04]*len(lx[i]), color='w', bottom=2-i+0.48, width=3, edgecolor='w', align='edge')
+    ax.bar(lz[i], [0.4]*len(lz[i]), color='red', bottom=2-i+0.3, width=3, alpha=1, edgecolor='red', align='edge')
+    ax.bar(lz[i], [0.04]*len(lz[i]), color='k', bottom=2-i+0.48, width=3, edgecolor='k', align='edge')
   ax.set_title(title)
   

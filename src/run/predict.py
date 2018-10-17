@@ -412,7 +412,7 @@ def _pred_gene(ps): ### trans
         if tp is not None and tp < minp : minp = tp
         if minp > minpth : continue
         fsp, fss = stat.fisher_method([tp, rp]) #
-        if fsp > fspth : continue
+        if tp is not None and fsp > fspth : continue
         has_stop = tsq[stop-3:stop] in orf.cstop
         e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N', fsp], has_stop)
         es.append(e)
