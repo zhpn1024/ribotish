@@ -69,6 +69,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col 
   ax.xaxis.set_ticks_position('bottom')
   ax.set_xlim((0, rlen))
   ax.set_ylim((0, ymax))
+  ax.label_outer() # setp(ax.get_xticklabels(), visible=False)
   ax.set_ylabel(ylab)
   ax.set_title(title)
   if showlegend :
