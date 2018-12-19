@@ -156,8 +156,8 @@ class Ribo:
     if glm : return stat.glmNBTest(inarr, outarr)
     p = rstest(inarr, outarr, delta = delta)
     if show : 
-      print 'inarr', inarr
-      print 'outarr', outarr
+      print('inarr: {}'.format(inarr))
+      print('outarr: {}'.format(outarr))
     return p
   
   def multi_orf_test(self, orflist, glm = False): 
@@ -221,7 +221,7 @@ class Ribo:
     if r2.rlen() < minRlen or orf.indr.rlen() < minRlen : r2 = blank[orf.frame()]
     ep = self.enrich_test_region(r1, r2, orf.frame(), glm = glm, show = show)
     if show : 
-      print r1, r2, fp, ep, orf.frame()
+      print(r1, r2, fp, ep, orf.frame())
       #print self.cnts[0:1000]
       #print self.cnts[1000:2000]
     ''' More complicated tests
