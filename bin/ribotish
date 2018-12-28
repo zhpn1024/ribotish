@@ -29,7 +29,7 @@ def main():
   args = argparser.parse_args()
 
   cmd  = args.subcommand
-  if commands.has_key(cmd):
+  if cmd in commands: # commands.has_key(cmd):
     start = time.time()
     commands[cmd].run(args)
     end = time.time()
