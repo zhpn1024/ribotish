@@ -65,6 +65,9 @@ def int2(s):
   lst = eval('['+s+']')
   return tuple(map(int, lst))
 
+try: imap = itertools.imap
+except: imap = map
+
 def sig(data):
   '''if data fit thresholds
   '''
@@ -221,7 +224,7 @@ def run(args):
   if args.verbose : print ("Reading bams...")
   trans_iter = io.transIter(args.genepath, fileType = args.geneformat, verbose = args.verbose, filt = trans_for_bam)
   para_iter = transPara(trans_iter, trans_for_bam)
-  if args.numProc <= 1 : pred_iter = itertools.imap(_get_tis, para_iter)
+  if args.numProc <= 1 : pred_iter = imap(_get_tis, para_iter)
   else : 
     from multiprocessing import Pool
     pool = Pool(processes = args.numProc - 1)

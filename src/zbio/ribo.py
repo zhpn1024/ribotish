@@ -16,6 +16,11 @@ defOffset = 12
 #nhead, ntail = defOffset, 30 - defOffset
 nhead = ntail = 0
 
+try: imap = itertools.imap
+except: imap = map
+try: izip = itertools.izip
+except: izip = zip
+
 def offset(read = 30, offdict = None):
   '''get P-site offset by read length, default: 12
   '''
@@ -429,8 +434,8 @@ def estimate_tis_bg_all(gtfpath, bampath, genomefapath, parts = [0.25, 0.5, 0.75
   data = [exp.ReadDict() for i in range(len(parts))]
   
   gene_iter = gtf.gtfGene_iter(gtffile, addchr = addchr, chrs = genome.idx, verbose = verbose)
-  para_iter = itertools.izip(gene_iter, itertools.repeat(bampath), itertools.repeat(offdict))
-  if numProc <= 1 : merge_iter = itertools.imap(_merge_cnts, para_iter)
+  para_iter = izip(gene_iter, itertools.repeat(bampath), itertools.repeat(offdict))
+  if numProc <= 1 : merge_iter = imap(_merge_cnts, para_iter)
   else : 
     pool = Pool(processes = numProc - 1)
     merge_iter = pool.imap_unordered(_merge_cnts, para_iter, chunksize = 100)
@@ -560,8 +565,8 @@ def estimate_tis_bg_inframe(genepath, bampaths, genomefapath, parts = [0.25, 0.5
   data = [exp.ReadDict() for i in range(len(parts))]
   
   gene_iter = gtf.gtfgene_iter(gtffile, addchr = addchr, chrs = genome.idx, verbose = verbose)
-  para_iter = itertools.izip(gene_iter, itertools.repeat(bampaths), itertools.repeat(offdict))
-  if numProc <= 1 : merge_iter = itertools.imap(_merge_cnts_cds, para_iter)
+  para_iter = izip(gene_iter, itertools.repeat(bampaths), itertools.repeat(offdict))
+  if numProc <= 1 : merge_iter = imap(_merge_cnts_cds, para_iter)
   else : 
     pool = Pool(processes = numProc - 1)
     merge_iter = pool.imap_unordered(_merge_cnts_cds, para_iter, chunksize = 20)
@@ -641,8 +646,8 @@ def estimateTISbg(genepath, bampaths, genomefapath, parts = [0.25, 0.5, 0.75], o
   
   trans_iter = io.transSelectIter(genepath, fileType = geneformat, chrs = genome.idx, verbose = verbose)
   args2 = bampaths, offdict, genomefapath, harrwidth, skip_tis, alt_tis, paired
-  para_iter = itertools.izip(trans_iter, itertools.repeat(args2)) # , itertools.repeat(offdict))
-  if numProc <= 1 : merge_iter = itertools.imap(_cdsCounts, para_iter)
+  para_iter = izip(trans_iter, itertools.repeat(args2)) # , itertools.repeat(offdict))
+  if numProc <= 1 : merge_iter = imap(_cdsCounts, para_iter)
   else : 
     pool = Pool(processes = numProc - 1)
     merge_iter = pool.imap_unordered(_cdsCounts, para_iter, chunksize = 5)
@@ -714,8 +719,8 @@ def estimate_tis_bg(gtfpath, bampath, genomefapath, parts = [0.25, 0.5, 0.75], o
   data = [exp.readdict() for i in range(len(parts))]
   
   gene_iter = gtf.gtfgene_iter(gtffile, addchr = addchr, chrs = genome.idx, verbose = verbose)
-  para_iter = itertools.izip(gene_iter, itertools.repeat(bampath), itertools.repeat(offdict))
-  if numProc <= 1 : merge_iter = itertools.imap(_max_cnts, para_iter)
+  para_iter = izip(gene_iter, itertools.repeat(bampath), itertools.repeat(offdict))
+  if numProc <= 1 : merge_iter = imap(_max_cnts, para_iter)
   else : 
     pool = Pool(processes = numProc - 1)
     merge_iter = pool.imap_unordered(_max_cnts, para_iter, chunksize = 20)
@@ -790,6 +795,7 @@ class lenDis:
       self.d1d[l] = [exp.ReadDict() for i in range(d)]
       self.d2d[l] = [exp.ReadDict() for i in range(d)]
       self.cnts[l] = [0] * tl # for transcript level
+      self.df[l] = [exp.ReadDict() for i in range(codonSize)]
   def record(self, l, i, n = 1):
     '''record a read with length l and 5' end position i
     '''
@@ -960,8 +966,8 @@ def lendis(genepath, bampath, lens = [25,35], dis = [-40,20], ccds = False, minR
   #gene_iter = gtf.gtfgene_iter(gtffile, addchr = addchr, verbose = verbose)
   trans_iter = io.transSelectIter(genepath, fileType = geneformat, verbose = verbose)
   rep = itertools.repeat
-  para_iter = itertools.izip(trans_iter, rep(bampath), rep(lens), rep(dis), rep(ccds), rep(minR), rep(m0), rep(cdsBins), rep(paired))
-  if numProc <= 1 : len_iter = itertools.imap(_lendis_trans, para_iter) #_lendis_gene
+  para_iter = izip(trans_iter, rep(bampath), rep(lens), rep(dis), rep(ccds), rep(minR), rep(m0), rep(cdsBins), rep(paired))
+  if numProc <= 1 : len_iter = imap(_lendis_trans, para_iter) #_lendis_gene
   else : 
     pool = Pool(processes = numProc - 1)
     len_iter = pool.imap_unordered(_lendis_trans, para_iter, chunksize = 20) #_lendis_gene

@@ -61,6 +61,9 @@ def strlist(s):
   '''
   return s.split(',')
 
+try: imap = itertools.imap
+except: imap = map
+
 def run(args):
   '''Main function for ORF finding
   '''
@@ -216,7 +219,7 @@ def run(args):
   j = [0,0] # total number of ORF/TIS for BH correction
   gene_iter = io.geneIter(args.genepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
   para_iter = genePara(gene_iter, inorf, inprofile)
-  if args.numProc <= 1 : pred_iter = itertools.imap(_pred_gene, para_iter)
+  if args.numProc <= 1 : pred_iter = imap(_pred_gene, para_iter)
   else : 
     #from multiprocessing import Pool
     #pool = Pool(processes = args.numProc - 1)

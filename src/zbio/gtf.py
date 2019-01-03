@@ -31,6 +31,7 @@ class Exon:
     self.type, self.score, self.attrstr = lst[2], lst[5], lst[8]
     self.gff, self.addchr, self.frame = gff, addchr, lst[7]
     self.lst = lst
+    self.exons = [self]
   def __repr__(self):
     return self.chr + ':'+str(self.start)+'-'+str(self.stop)+':'+self.strand
   def __str__(self, sep = '\t', new = False):
@@ -98,7 +99,13 @@ class Exon:
     return self.sym_c
   @property
   def id(self):
-    return self.attr('exon_id')
+    try: return self._id
+    except:
+      self._id = self.attr('exon_id')
+      return self._id
+  @id.setter
+  def id(self, value):
+    self._id = value
   @property
   def end5(self): #5' end, all bed
     if self.strand != '-' : return self.start
@@ -168,9 +175,9 @@ class Exon:
     #self.attr = other.attr
     self.gff, self.addchr, self.frame = other.gff, other.addchr, other.frame
     self.lst = other.lst
-  @property
-  def exons(self):
-    return [self]
+  #@property
+  #def exons(self):
+    #return [self]
   def cds_start(self, cdna = False): return None
   def cds_stop(self, cdna = False): return None
     
