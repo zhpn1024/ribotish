@@ -15,6 +15,10 @@ senseframes = [1, 2, 3]
 antiframes = [-1, -2, -3]
 frames = [1, 2, 3, -1, -2, -3]
 
+def cmp3(a, b):
+  ''' cmp for python3'''
+  return (a > b) - (a < b)
+
 class Orf:
   '''multiple start with same stop (in the same ORF)
   '''
@@ -50,6 +54,15 @@ class Orf:
     else : return 0
   def __cmp__(self, other):
     return cmp(len(self), len(other)) or cmp(self.start(),other.start)
+  def cmp(self, other):
+    return cmp3(len(self), len(other)) or cmp3(self.start(),other.start)
+  def __eq__(self, other):
+    return self.cmp(other) == 0
+  def __lt__(self, other):
+    return self.cmp(other) < 0
+  def __gt__(self, other):
+    return self.cmp(other) > 0
+
   def length(self):
     return len(self)
   def aa_len(self):
@@ -170,6 +183,15 @@ class FixedOrf():
     return self.start % 3
   def __cmp__(self, other):
     return cmp(self.start, other.start) or cmp(self.stop, other.stop)
+  def cmp(self, other):
+    return cmp3(self.start, other.start) or cmp3(self.stop, other.stop)
+  def __eq__(self, other):
+    return self.cmp(other) == 0
+  def __lt__(self, other):
+    return self.cmp(other) < 0
+  def __gt__(self, other):
+    return self.cmp(other) > 0
+
   def orfstr(self, seq):
     return "%s|%d-%d" % (seq[self.start:self.start+3], self.start, self.stop)
 def orf_by_pos(seq, pos): ### Unkown start codon, only to find stop codon

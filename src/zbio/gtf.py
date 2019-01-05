@@ -19,6 +19,9 @@ def changechr(chr):
   elif chr == 'chrM' : return 'MT'
   elif chr[0:3] == 'chr' : return chr[3:]
   else : return chr
+def cmp3(a, b):
+  ''' cmp for python3'''
+  return (a > b) - (a < b)
 
 class Exon:
   '''exon in gtf format, 0 based, similar as bed
@@ -44,6 +47,14 @@ class Exon:
     return "%s:%d-%d:%s" % (self.chr, self.start, self.stop, self.strand)
   def __cmp__(self, other):
     return cmp(self.chr,other.chr) or cmp(self.start,other.start) or cmp(self.stop,other.stop)
+  def cmp(self, other):
+    return cmp3(self.chr,other.chr) or cmp3(self.start,other.start) or cmp3(self.stop,other.stop)
+  def __eq__(self, other):
+    return self.cmp(other) == 0
+  def __lt__(self, other):
+    return self.cmp(other) < 0
+  def __gt__(self, other):
+    return self.cmp(other) > 0
   def __len__(self): 
     return self.stop - self.start
   def attr(self, key):
