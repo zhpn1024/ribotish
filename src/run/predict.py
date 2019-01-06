@@ -387,7 +387,8 @@ def _pred_gene(ps): ### trans
       tribo = ribo.Ribo(t, bamload = ribombl, compatible = compatible, mis = compatiblemis)
 
     score = ttis.abdscore()
-    ip = ribo.pidx(score, slp)   
+    if score is not None: ip = ribo.pidx(score, slp)   
+    else: ip = 0
     if verbose >= 2 : print(io.tabjoin(g.id, t.id, ttis.total, tribo.total))
     cds1 = t.cds_start(cdna = True) 
     cds2 = t.cds_stop(cdna = True) 

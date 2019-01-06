@@ -54,7 +54,7 @@ def geneIter(filePath, fileType = 'auto', gz = False, **kwargs):
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
-    import bed
+    from . import bed
     return bed.bed12_iter(infile, **kwargs)
   elif fileType == 'gtf' :
     from . import gtf

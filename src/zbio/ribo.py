@@ -1134,7 +1134,7 @@ def formatdict(d, tab=1):
   '''show dict in ordered manner
   '''
   s = '{'
-  ks = sorted(d)
+  ks = sorted([k for k in d if type(k) == int]) + sorted([k for k in d if type(k) == str])
   for k in ks:
     if type(d[k]) == dict : s += '{}: {}, '.format(repr(k), formatdict(d[k], tab+1))
     else : s += '{}: {}, '.format(repr(k), repr(d[k]))

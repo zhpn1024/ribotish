@@ -53,9 +53,9 @@ class Orf:
     #elif self.end > 0 : return self.end - self.start()
     else : return 0
   def __cmp__(self, other):
-    return cmp(len(self), len(other)) or cmp(self.start(),other.start)
+    return cmp(len(self), len(other)) or cmp(self.start(),other.start())
   def cmp(self, other):
-    return cmp3(len(self), len(other)) or cmp3(self.start(),other.start)
+    return cmp3(len(self), len(other)) or cmp3(self.start(),other.start())
   def __eq__(self, other):
     return self.cmp(other) == 0
   def __lt__(self, other):

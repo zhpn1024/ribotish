@@ -41,7 +41,7 @@ class Bamfile(pysam.Samfile):
       #chr = changechr(chr)
     if chr is None : 
       print("chr {} not found in Bamfile!".format(chr0))
-      raise StopIteration
+      return #raise StopIteration
     rds = self.fetch(reference=chr, start=start, end=stop) #, multiple_iterators=multiple_iterators)
     r1, r2 = {}, {}
     for read in rds:
@@ -260,7 +260,7 @@ class Bam():#AlignedRead
         else: p1 -= l
       elif ctype in [2,3]: # D: deletion from the reference, N: skipped region from the reference
         pos += l
-    return None
+    return pos
   @property
   def introns(self):
     from . import bed
@@ -428,7 +428,7 @@ def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, min
   '''compatible version of transReadsIter, slightly different
   '''
   chr = bamfile.get_chrname(trans.chr)
-  if chr is None : raise StopIteration
+  if chr is None : return #raise StopIteration
     #print("chr {} not found in Bamfile!".format(chr0))
     #raise StopIteration
   #chr = trans.chr
@@ -460,7 +460,7 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
   chr = bamfile.get_chrname(trans.chr)
   if chr is None : 
     #print("chr {} not found in Bamfile!".format(trans.chr))
-    raise StopIteration
+    return #raise StopIteration
   #chr = trans.chr
   #if chr not in bamfile.references : 
       #chr = changechr(chr)
@@ -572,6 +572,7 @@ class BamLoadChr:
         if r.strand not in self.data : continue
         p = posFunc(r)
         #print p
+        if p is None: continue
         if start is not None and p < start : continue
         if stop is not None and p > stop : continue
         if p not in self.data[r.strand] : self.data[r.strand][p] = {}

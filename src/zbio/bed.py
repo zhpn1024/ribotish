@@ -57,18 +57,18 @@ class Bed3:
   @property
   def id(self): #Bed3 only
     return "noname"
-  @property
-  def tid(self):
-    return self.id
-  @property
-  def gid(self):
-    return self.tid
-  @property
-  def symbol(self):
-    return self.gid
-  @property
-  def genetype(self):
-    return ""
+  #@property
+  #def tid(self):
+    #return self.id
+  #@property
+  #def gid(self):
+    #return self.tid
+  #@property
+  #def symbol(self):
+    #return self.gid
+  #@property
+  #def genetype(self):
+    #return ""
   @property
   def score(self): #Bed3 only
     return 0.0

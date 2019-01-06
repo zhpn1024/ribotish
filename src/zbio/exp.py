@@ -4,7 +4,10 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 def cmp3(a, b):
   ''' cmp for python3'''
-  return (a > b) - (a < b)
+  if a is None:
+    if b is None: return 0
+    else: return -1
+  return bool(a > b) - bool(a < b)
 
 import math
 class Exp(): #values for one gene/trans/probe

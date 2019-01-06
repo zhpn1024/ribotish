@@ -144,7 +144,7 @@ def qualityPlot(args):
   x1 = [l - 0.4 for l in lendis.keys()]
   ax.bar(x1, lendis.values(), alpha=0.6, align='edge')
   formatax(ax)
-  ty = nearest(max(lendis.values()+[1]), up=False)
+  ty = nearest(max(max(lendis.values()),1), up=False)
   ax.set_yticks([0, ty])
   ax.set_yticklabels([0,numk(ty)])
   if m0 : ax.set_title("5' end match RPFs\n\nRPF length distribution")
@@ -154,7 +154,7 @@ def qualityPlot(args):
     x1 = [l - 0.4 for l in lendism0.keys()]
     ax.bar(x1, lendism0.values(), alpha=0.6, align='edge')
     formatax(ax)
-    ty = nearest(max(lendism0.values()+[1]), up=False)
+    ty = nearest(max(max(lendism0.values()),1), up=False)
     ax.set_yticks([0, ty])
     ax.set_yticklabels([0,numk(ty)])
     ax.set_title("5' end mismatch RPFs\n\nRPF length distribution")
