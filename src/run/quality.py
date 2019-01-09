@@ -90,6 +90,9 @@ def run(args):
       ad.write(outfile)
     print('Counted reads: {}'.format(s))
     outfile.close()
+    if s == 0:
+      print('No reads found! Check read length or protein coding annotation.')
+      exit(1)
     args.input = args.output
   if args.figpdfpath is None : 
     args.figpdfpath = args.ribobampath[:-4] + '_qual.pdf'
