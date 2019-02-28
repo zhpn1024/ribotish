@@ -33,7 +33,7 @@ def set_parser(parser):
   parser.add_argument("--colors", type=strlist, help="User specified Matplotlib accepted color codes for three frames (default: 'r,g,b')")
 
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes (default: 1)")
-  parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
+  parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase output verbosity")
 
 def int2(s):
   '''Convert comma seperated string to tuple
@@ -64,10 +64,10 @@ def run(args):
   if args.input is None :
     minR = 1
     if args.genepath is None : 
-      print('Missing -g gene annotation file!')
+      print('Error: missing -g gene annotation file!')
       exit(1)
     if args.ribobampath is None : 
-      print('Missing -b riboseq bam file!')
+      print('Error: missing -b riboseq bam file!')
       exit(1)
     if args.output is None : 
       args.output = args.ribobampath[:-4] + '_qual.txt'
@@ -91,7 +91,7 @@ def run(args):
     print('Counted reads: {}'.format(s))
     outfile.close()
     if s == 0:
-      print('No reads found! Check read length or protein coding annotation.')
+      print('Error: no reads found! Check read length or protein coding annotation.')
       exit(1)
     args.input = args.output
   if args.figpdfpath is None : 

@@ -1167,7 +1167,7 @@ def TIStest_chi2(t1, t2, r1, r2, scale_t = 1, scale_r = 1, alt = 'two.tailed'):
   p2, pr = 1 - p1, 1 - pt #sumt / total, sum2 / total
   obs = nt1, nt2, nr1, nr2
   exp = total * p1 * pt, total * p2 * pt, total * p1 * pr, total * p2 * pr
-  chi2, pv = stat.chisquare(obs, exp)
+  chi2, pv = stat.chisquare(obs, exp, ddof=1)
   if math.isnan(pv) : 
     #print('nan for {} {} {} {}!'.format(t1, t2, r1, r2))
     return 1.0

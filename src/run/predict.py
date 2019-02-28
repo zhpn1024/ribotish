@@ -54,7 +54,7 @@ def set_parser(parser):
   parser.add_argument("--compatiblemis", type=int, default=2, help="Missed bases allowed in reads compatibility check (default: 2)")
   # running options
   parser.add_argument("-p", type=int, dest="numProc", default=1, help="Number of processes")
-  parser.add_argument("-v", "--verbose", action="count", help="Increase output verbosity")
+  parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase output verbosity")
 
 def strlist(s):
   '''Convert comma seperated file name string to list
