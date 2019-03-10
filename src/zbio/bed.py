@@ -19,9 +19,10 @@ class Bed3:
     if type(x)==str:
       l = x.strip().split('\t')
       if bin: l[0:1] = []
-    elif type(x) == type(self) : l = [getattr(x, i) for i in self.Header]
+    elif type(x) == list: l = x
+    #elif type(x) == type(self) : l = [getattr(x, i) for i in self.Header]
     elif type(x)==dict: l=[x[i] for i in self.Header]
-    else: l = x
+    else: l = [getattr(x, i) for i in self.Header]
     lst=[]
     for i in range(self.n):
       try: lst.append(self.Format[i](l[i]))
