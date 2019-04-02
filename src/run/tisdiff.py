@@ -128,10 +128,10 @@ def run(args):
     if args.verbose : print("Loading RNASeq data...")
     rna_profile = exp.Profile()
     for lst in io.splitIter(args.rnaseq):
-      try : values = map(int, lst[1:])
+      try : values = list(map(int, lst[1:]))
       except : 
         try : 
-          values = map(float, lst[1:])
+          values = list(map(float, lst[1:]))
           print('Error: RNASeq data should be integers {}.'.format(lst))
           sys.exit(1)
         except ValueError: pass
@@ -181,7 +181,7 @@ def run(args):
       if tis not in tdata : 
         if tis[0] not in trans_for_bam : trans_for_bam[tis[0]] = [{} for j in range(l)]
         trans_for_bam[tis[0]][i][tis[1]] = None 
-        values.append(None)
+        values.append(0) #(None)
       else : values.append(tdata[tis][0])
     if args.rnaseq is not None : 
       if tis[0] in rna_profile.exps : values += rna_profile.exps[tis[0]].data # trans level

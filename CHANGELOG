@@ -1,3 +1,9 @@
+2019-4-2 ribotish 0.2.2
+
+	Python3 compatibility. Ribo-TISH can run in python 3.7.2 now.
+
+	Readme document update
+
 2018-9-6 ribotish 0.2.1
 
 	Tisdiff bug fix
