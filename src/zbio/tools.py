@@ -155,7 +155,7 @@ def cover_iter(bedIter, weight= lambda x: 1):
     current[0:i] = []
     clen = len(current)
     
-def overlap_iter(bedIterA, bedIterB, func=overlap, ignoreStrand = True, counts = [0,0]): ### Need Revise!!
+def overlap_iter(bedIterA, bedIterB, func=overlap, ignoreStrand = True, chrcmp = cmp, counts = [0,0]): ### Need Revise!!
   '''overlap of two bed iteraters (files), both should be sorted.
   '''
   lst = []
@@ -168,26 +168,26 @@ def overlap_iter(bedIterA, bedIterB, func=overlap, ignoreStrand = True, counts =
     j = -1
     cut = True
     for i in range(len(lst)):
-      if lst[i].chr < b.chr: j = i
-      elif lst[i].chr == b.chr:
+      if chrcmp(lst[i].chr, b.chr) < 0: j = i
+      elif chrcmp(lst[i].chr, b.chr) == 0:
         if cut and (lst[i].stop > b.start or func(lst[i], b)):
           j = i - 1
           cut = False          
         if func(lst[i], b):
           if ignoreStrand or lst[i].strand == b.strand : yield (lst[i], b)
     lst[0:(j+1)] = []
-    if ac.chr > b.chr or (ac.chr == b.chr and ac.start > b.stop) : continue
+    if chrcmp(ac.chr, b.chr) > 0 or (chrcmp(ac.chr, b.chr) == 0 and ac.start > b.stop) : continue
     if func(ac, b):
       if ignoreStrand or ac.strand == b.strand : yield (ac, b)
     if Aend == False : lst.append(ac)
     c = 0
     for a in bedIterA:
       counts[0] += 1
-      assert a.chr > ac.chr or a.start >= ac.start, "Records must be sorted!\n"+str(a)
+      assert chrcmp(a.chr, ac.chr) > 0 or a.start >= ac.start, "Records must be sorted!\n"+str(a)
       ac = a
       c += 1
-      if a.chr < b.chr: continue
-      elif a.chr == b.chr:
+      if chrcmp(a.chr, b.chr) < 0: continue
+      elif chrcmp(a.chr, b.chr) == 0:
         if a.stop < b.start: continue
         if func(a, b):
           if ignoreStrand or a.strand == b.strand : yield (a, b)

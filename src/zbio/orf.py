@@ -141,9 +141,9 @@ def allorf(seq, strand = '+', minaalen = 0, tail = -1) :
     if f > 0: s = seq
       #fa = f
     else: s = antiseq
-    fa = abs(f)
+    af = abs(f)
     o = Orf(frame = f)
-    for i in range(fa-1, length, codonSize):
+    for i in range(af-1, length, codonSize):
       try: codon = s[i:i+codonSize]
       except: break
       if codon in cstart: o.starts.append(i)

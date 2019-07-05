@@ -188,7 +188,12 @@ Each row shows the RPFs with different lengths.
 Offset parameter file
 `````````````````````
 
-This file saves P-site offsets for different reads lengths in python code dict format, and can be used in further analysis. The default offset file name is bampath+'.para.py' accompanied with the input bam file, and this default file name will be auto-recognized in further analysis. The offset parameter file is easy to interpret and can be edited by user if auto estimated offsets are not satisfying. If the bam file is in a different directory and user do not want to create a parameter file in that directory, we recommend creating a link for the bam file in current working directory, e.g. ```ln -s original/dir/ribo.bam```
+This file saves P-site offsets for different reads lengths in python code dict format, and can be used in further analysis. The default offset file name is bampath+'.para.py' accompanied with the input bam file. The file format is like
+::
+
+  offdict = {28: 12, 29: 12, 30: 12, 32: 13, 'm0': {29: 12, 30: 12, 31: 13}}
+
+The offset parameter file is easy to interpret and can be edited by user if auto estimated offsets are not correct. The default file name will be auto-recognized in further analysis. If the bam file is in a different directory and user do not want to create a parameter file in that directory, we recommend creating a link for the bam file in current working directory, e.g. ```ln -s original/dir/ribo.bam```
 
 Ribo-TISH does not guarantee that it can always find best P-site offset values. Users should check the quality figures and edit the parameter file if necessary. 
 

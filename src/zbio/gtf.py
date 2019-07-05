@@ -62,7 +62,8 @@ class Exon:
     '''
     s = self.attrstr
     if self.gff : 
-      p1 = s.find(key)
+      p1 = s.find(key+'=')
+      if p1 < 0 : p1 = s.find(key+':')
       if p1 < 0 : return ''
       else : p1 += len(key) #+ 1
       p2 = s.find(';', p1)
@@ -101,12 +102,16 @@ class Exon:
     try : return self.tid_c
     except : 
       self.tid_c = self.attr('transcript_id')
+      if self.gff and self.tid_c == '':
+        p = self.attr('Parent')
+        if p.startswith('rna-'): self.tid_c = p[4:]
       return self.tid_c
   @property
   def symbol(self):
     try : return self.sym_c
     except : 
       self.sym_c = self.attr('gene_name')
+      if self.gff and self.sym_c == '': self.sym_c = self.attr('gene')
     return self.sym_c
   @property
   def id(self):
