@@ -625,7 +625,6 @@ def _cdsCounts(args): # updated for bampath list
     return None
   tis = multiRibo(t, bampaths, offdict = offdict, compatible = False, paired = paired) # not compatible
   score = tis.abdscore()
-  if score is None: return None
   genome = fa.Fa(genomefapath)
   tsq = genome.transSeq(t) #tools.trans2seq(genome, t)
   tdata = exp.ReadDict()
@@ -777,10 +776,12 @@ def frame_bias(arr): # ['0', '1', '2', '01', '02', '12', '012']
 class lenDis:
   '''Calculate several distributions for quality control
   '''
-  def __init__(self, lens, dis, tl = 0, cds1 = 0, cds2 = 0, offset = defOffset):
+  def __init__(self, lens, dis, tl = 0, cds1 = 0, cds2 = 0, offset = defOffset, flank = 0):
     d = dis[1] - dis[0]
     self.dis = dis
     self.lens = lens
+    self.tl, self.flank = tl, flank
+    self.tl2 = tl + flank * 2
     self.cds1, self.cds2 = cds1, cds2
     self.d1, self.d2 = {}, {} #sum of reads near start or stop condons
     self.d1d, self.d2d = {}, {} # distributions of d1, d2
@@ -795,13 +796,14 @@ class lenDis:
       self.d2[l] = [0] * d
       self.d1d[l] = [exp.ReadDict() for i in range(d)]
       self.d2d[l] = [exp.ReadDict() for i in range(d)]
-      self.cnts[l] = [0] * tl # for transcript level
+      self.cnts[l] = [0] * self.tl2 # for transcript level, adding flanking positions
       self.df[l] = [exp.ReadDict() for i in range(codonSize)]
   def record(self, l, i, n = 1):
     '''record a read with length l and 5' end position i
     '''
     self.l[l] += n
-    self.cnts[l][i] += n
+    i2 = i + self.flank
+    if 0 <= i2 < self.tl2: self.cnts[l][i2] += n
     ir = i - self.cds1
     if self.dis[0] <= ir < self.dis[1] : self.d1[l][ir - self.dis[0]] += n
     ir = i - self.cds2
@@ -812,7 +814,7 @@ class lenDis:
     for l in self.d1: 
       self.df[l] = [exp.ReadDict() for i in range(codonSize)] # reset
       for i in range(self.cds1, self.cds2 + codonSize, codonSize):
-        io = i - self.offset - codonSize # -15 -> stop
+        io = i - self.offset - codonSize + self.flank # -15 -> stop
         if io < 0 : continue
         for i2 in range(codonSize):
           self.df[l][i2].record(self.cnts[l][io+i2]) #
@@ -833,7 +835,7 @@ class lenDis:
       cfcnts = [[0] * length for j in range(codonSize)] # profile in 3 frames
       for si in range(length) :
         for j in range(codonSize) : 
-          io = si * codonSize + j + self.cds1 - self.offset - codonSize
+          io = si * codonSize + j + self.cds1 - self.offset - codonSize + self.flank
           if io < 0 : continue
           cfcnts[j][si] = self.cnts[l][io]
       for i in range(bins):
@@ -932,14 +934,15 @@ def _lendis_trans(args):
   bamfile = bam.Bamfile(bampath, "rb")
   tl = t.cdna_length()
   cds1, cds2 = t.cds_start(cdna = True), t.cds_stop(cdna = True) - codonSize
-  td = lenDis(lens, dis, tl, cds1, cds2)
-  if m0: tdm = lenDis(lens, dis, tl, cds1, cds2)
+  flank = - dis[0] # in case transcript annotation has no 5'UTR (starts from CDS start)
+  td = lenDis(lens, dis, tl, cds1, cds2, flank=flank)
+  if m0: tdm = lenDis(lens, dis, tl, cds1, cds2, flank=flank)
   tr = 0 # Total reads
-  for r in bam.transReadsIter(bamfile, t, compatible = False, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired):
+  for r in bam.transReadsIter(bamfile, t, compatible=False, maxNH=maxNH, minMapQ=minMapQ, secondary=secondary, paired=paired, flank=flank):
     if m0 : ism0 = r.is_m0()
     l = r.fragment_length()
     if l < lens[0] or l >= lens[1]: continue # not in given length range
-    i = t.cdna_pos(r.genome_pos(0)) # 5' end 
+    i = t.cdna_pos(r.genome_pos(0), flank=flank) # 5' end 
     if i is None : continue
     tr += 1
     if not m0 or not ism0 : 

@@ -424,7 +424,7 @@ class Bam():#AlignedRead
       if self.read2.get_tag('MD')[-1] == '0' : 
         if not self.read2.get_tag('MD')[-2].isdigit() : return True
     return False
-def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False): 
+def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False, flank = 0): 
   '''compatible version of transReadsIter, slightly different
   '''
   chr = bamfile.get_chrname(trans.chr)
@@ -435,7 +435,8 @@ def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, min
   #if chr not in bamfile.references : 
       #chr = changechr(chr)
       #if chr not in bamfile.references : raise StopIteration
-  rds = bamfile.fetch(reference=chr, start=trans.start, end=trans.stop)#, multiple_iterators=False)
+  if flank < 0: flank = 0
+  rds = bamfile.fetch(reference=chr, start=trans.start-flank, end=trans.stop+flank)#, multiple_iterators=False)
   #introns = trans.introns
   for r in rds:
     read = Bam(r, bamfile)
@@ -447,31 +448,31 @@ def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, min
     except: pass
     if not secondary and r.is_secondary : continue
     if minMapQ is not None and read.read.mapping_quality < minMapQ : continue
-    o = read.read.get_overlap(trans.start, trans.stop)
+    o = read.read.get_overlap(trans.start-flank, trans.stop+flank)
     if o < read.cdna_length() - mis: 
       continue
     if read.is_compatible(trans = trans, mis = mis) :
       yield read
     #else:
       #print read.id, b, read.cdna_length()
-def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False, paired = False):
+def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False, paired = False, flank = 0):
   '''fetch reads from transcript exons
   '''
   chr = bamfile.get_chrname(trans.chr)
   if chr is None : 
     #print("chr {} not found in Bamfile!".format(trans.chr))
     return #raise StopIteration
-  #chr = trans.chr
-  #if chr not in bamfile.references : 
-      #chr = changechr(chr)
-      #if chr not in bamfile.references : raise StopIteration
   if compatible : 
     from . import interval
     transitv = interval.trans2interval(trans)
+  if flank < 0: flank = 0
   used = {}
-  #trans.exons = trans.exons ##
   for e in trans.exons : 
-    rds = bamfile.fetch_reads(chr=chr, start=e.start, stop=e.stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired)#, multiple_iterators=False)
+    start, stop = e.start, e.stop
+    if flank > 0:
+      if start == trans.start: start -= flank
+      if stop == trans.stop: stop += flank
+    rds = bamfile.fetch_reads(chr=chr, start=start, stop=stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired)#, multiple_iterators=False)
     for read in rds: #yield read
       #read = Bam(r, bamfile)
       if (read.id, read.fragment_start) in used : continue

@@ -200,8 +200,20 @@ class Bed3:
     return False
   def is_sense(self,other): #In same strand? All bed
     return self.strand==other.strand
-  def cdna_pos(self, p, strict = False): #Bed3 and Bed6
+
+  def flank_pos(self, p, flank = 100):
+    if flank < 0: return None
+    if self.start - flank <= p <= self.start:
+      if self.strand != '-': return p - self.start # upstream
+      else: return self.start - p + self.cdna_length()
+    if self.stop <= p <= self.stop + flank:
+      if self.strand != '-': return p - self.stop + self.cdna_length()
+      else: return self.stop - p # upstream
+    return None
+
+  def cdna_pos(self, p, strict = False, flank = 0): #Bed3 and Bed6
     if self.is_contain(p, strict): return abs(p-self.end5)
+    elif flank > 0: return self.flank_pos(p, flank)
     else: return None
   def genome_pos(self, p, bias = 1): #Bed3 and Bed6
     m = self.cdna_length()
@@ -413,12 +425,14 @@ class Bed12(Bed6):
     blockstarts = [st - self.start for st in self.blockStarts]
     return self(blockStarts = blockstarts)
 
-  def cdna_pos(self, p, strict = False):
+  def cdna_pos(self, p, strict = False, flank = 0):
     '''if strict is True, the 3' end of exon will be considered as not in the transcript,
     if strict is False, 3' end of exon will be considered as start of the next exon, 
     or transcript end (self.cdna_length()) if in the last exon.
     '''
-    if not self.is_contain(p, strict) : return None
+    if not self.is_contain(p, strict) : # return None
+      if flank <= 0: return None
+      else: return self.flank_pos(p, flank)
     p1 = p - self.start # genome relative posistion
     pos = 0 # cDNA pos
     l=list(range(self.blockCount))

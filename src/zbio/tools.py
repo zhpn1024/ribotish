@@ -215,11 +215,13 @@ def rand_overlap_iter(bedIterA, bedListB, func=overlap, ignoreStrand = True): # 
       if ignoreStrand or a.strand == bedListB[i].strand :
         yield (a, bedListB[i])
       i -= 1
+      if i < 0: break
     i = i1
     while func(a, bedListB[i]):
       if ignoreStrand or a.strand == bedListB[i].strand :
         yield (a, bedListB[i])
       i += 1
+      if i >= m: break
       #else : 
         #print 'i0', ignoreStrand, a.id, a.strand, bedListB[i0].id, bedListB[i0].strand
     #if func(a, bedListB[i1]):

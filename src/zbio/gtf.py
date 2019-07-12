@@ -173,8 +173,19 @@ class Exon:
     else : 
       if strict : return p <= self.start
       else : return p < self.start
-  def cdna_pos(self, p, strict = False): # exon only
+  def flank_pos(self, p, flank = 100):
+    if flank < 0: return None
+    if self.start - flank <= p <= self.start:
+      if self.strand != '-': return p - self.start # upstream
+      else: return self.start - p + self.cdna_length()
+    if self.stop <= p <= self.stop + flank:
+      if self.strand != '-': return p - self.stop + self.cdna_length()
+      else: return self.stop - p # upstream
+    return None
+
+  def cdna_pos(self, p, strict = False, flank = 0): # exon only
     if self.is_contain(p, strict): return abs(p-self.end5)
+    elif flank > 0: return self.flank_pos(p, flank)
     else: return None
   def genome_pos(self, p, bias = 1): # exon only
     m = self.cdna_length()
@@ -304,7 +315,9 @@ class gtfTrans(Exon):
     exonStops.sort()
     lst += [tup2com(exonStarts), tup2com(exonStops)]
     return '\t'.join(map(str, lst))
-  def check(self):
+  def check(self, final = True):
+    if final and len(self.exons) == 0:
+      if len(self.cds) > 0: self.exons += self.cds
     for e in self.exons:
       if e.start < self.start: self.start = e.start
       if e.stop > self.stop: self.stop = e.stop
@@ -430,22 +443,20 @@ class gtfTrans(Exon):
       last = e.end3
     self._introns = introns
     return introns
-  def cdna_pos(self, p, strict = False):
+  def cdna_pos(self, p, strict = False, flank = 0):
     '''if strict is True, the 3' end of exon will be considered as not in the transcript,
     if strict is False, 3' end of exon will be considered as start of the next exon, 
     or transcript end (self.cdna_length()) if in the last exon.
+    if flank is not 0, TSS and TTS flanking regions are returned with negative distance and
+    cDNA length + distance
     '''
-    if not self.is_contain(p, strict) : return None
-    #if p < self.start or p > self.stop : return None
+    if not self.is_contain(p, strict) :
+      if flank <= 0: return None
+      else: return self.flank_pos(p, flank)
     pos = 0
     for e in self.exons:
       if e.is_upstream(p, strict) : return None
       if e.is_contain(p, strict) : return pos + abs(p - e.end5) # e.start <= p <= e.stop:
-        #if self.is_reverse():
-          #pos += e.stop - p
-        #else:
-          #pos += p - e.start
-        #return pos
       pos += len(e)
     return None
   def is_exon(self, p, strict = False):

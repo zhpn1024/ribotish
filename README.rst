@@ -214,15 +214,21 @@ For TI-Seq data only
 
   ribotish predict -t ltm.bam -g gene.gtf -f genome.fa -o pred.txt
 
-User provided candidates with two regular riboseq data
-::
-
-  ribotish predict -b chx1.bam,chx2.bam -g gene.gtf -f genome.fa -i cand.txt -o pred.txt
-
 De novo ORF prediction with only regular riboseq data using longest strategy
 ::
 
   ribotish predict -b chx.bam -g gene.gtf -f genome.fa --longest -o pred.txt
+
+De novo ORF prediction with two regular riboseq data using framebest strategy
+::
+
+  ribotish predict -b chx1.bam,chx2.bam -g gene.gtf -f genome.fa --framebest -o pred.txt
+
+Only test user provided ORF candidates with two regular riboseq data
+::
+
+  ribotish predict -b chx1.bam,chx2.bam -g gene.gtf -f genome.fa -i cand.txt -o pred.txt
+
 
 Options
 --------------

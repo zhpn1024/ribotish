@@ -129,11 +129,13 @@ def suffixType(filePath, gz = False):
 
 def tabjoin(a, *args) : #, sep = '\t'):
   sep = '\t'
-  if hasattr(a, '__iter__') : #s = sep.join(map(str, a))
-    arr = map(str, a)
+  if type(a) == str: arr = [a]
+  elif hasattr(a, '__iter__') : #s = sep.join(map(str, a))
+    arr = list(map(str, a))
   else : #s = str(a)
     arr = [str(a)]
   for a in args :
-    if hasattr(a, '__iter__') : arr += map(str, a)
+    if type(a) == str: arr.append(a)
+    elif hasattr(a, '__iter__') : arr += map(str, a)
     else : arr.append(str(a))
   return sep.join(arr)

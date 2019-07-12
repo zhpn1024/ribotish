@@ -73,7 +73,8 @@ def run(args):
       args.output = args.ribobampath[:-4] + '_qual.txt'
     if args.chrmap is not None :
       chrmap = {}
-      for lst in io.splitIter(args.chrmap):
+      for lst in io.splitIter(args.chrmap, sep=None):
+        if len(lst) < 2: continue
         chrmap[lst[0]] = lst[1]
         chrmap[lst[1]] = lst[0]
       bam.chrmap = chrmap
