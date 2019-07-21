@@ -625,6 +625,7 @@ def _cdsCounts(args): # updated for bampath list
     return None
   tis = multiRibo(t, bampaths, offdict = offdict, compatible = False, paired = paired) # not compatible
   score = tis.abdscore()
+  if score is None: return None
   genome = fa.Fa(genomefapath)
   tsq = genome.transSeq(t) #tools.trans2seq(genome, t)
   tdata = exp.ReadDict()
