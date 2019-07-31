@@ -5,6 +5,7 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 
 def splitIter(filePath, sep = '\t', gz = False, skip = 0, title = None):
   if type(filePath) is str :
+    filePath = filePath.strip()
     if filePath.split('.')[-1].lower() == 'gz' : gz = True
     if gz :
       import gzip

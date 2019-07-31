@@ -180,7 +180,8 @@ def run(args):
   known_tis = {}
   if args.agenepath != args.genepath :
     if verbose : print('Loading CDS annotation...')
-    for g in io.geneIter(args.agenepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose):
+    for g in io.geneIter(args.agenepath, fileType = args.geneformat, verbose = args.verbose):
+      if genome.get_chrname(g.chr) is None: continue
       if g.chr not in cds_regions :
         cds_regions[g.chr] = {'+':[interval.Interval() for i in range(3)], '-':[interval.Interval() for i in range(3)]}
         known_tis[g.chr] = {'+':{}, '-':{}}
@@ -218,7 +219,7 @@ def run(args):
   profile = exp.Profile()
   title = ['TISGroup', 'TISCounts', 'TISPvalue', 'RiboPvalue', 'RiboPStatus']
   j = [0,0] # total number of ORF/TIS for BH correction
-  gene_iter = io.geneIter(args.genepath, fileType = args.geneformat, chrs = genome.idx, verbose = args.verbose)
+  gene_iter = io.geneIter(args.genepath, fileType = args.geneformat, verbose = args.verbose) # chrs = genome.idx
   para_iter = genePara(gene_iter, inorf, inprofile)
   if args.numProc <= 1 : pred_iter = imap(_pred_gene, para_iter)
   else : 
@@ -357,6 +358,7 @@ def _pred_gene(ps): ### trans
   tpfs = {} #trans profiles
   genome = fa.Fa(genomefapath)
   has_tis = len(tisbampaths) > 0
+  if genome.get_chrname(g.chr) is None: return es, j, tpfs, g
 
   load = True
   if candidates is not None :
