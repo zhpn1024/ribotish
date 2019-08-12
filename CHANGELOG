@@ -1,3 +1,13 @@
+2019-8-12 ribotish 0.2.3
+
+	Fix problem reading NCBI gff files.
+
+	Python3 compatibility.
+
+	Add support for transcript annotation starting at CDS start (no 5'UTR) in quality module.
+
+	Fix chrmap problem in genome fa file.
+
 2019-4-2 ribotish 0.2.2
 
 	Python3 compatibility. Ribo-TISH can run in python 3.7.2 now.

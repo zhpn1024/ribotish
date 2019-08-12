@@ -424,6 +424,26 @@ class Bam():#AlignedRead
       if self.read2.get_tag('MD')[-1] == '0' : 
         if not self.read2.get_tag('MD')[-2].isdigit() : return True
     return False
+  def mismatches(self):
+    import re
+    mm = {}
+    md = self.read.get_tag('MD')
+    ns = re.split('[ATGC^]+', md)
+    ms = re.split('\d+', md)
+    l = self.cdna_length()
+    p = 0
+    for i, n in enumerate(ns):
+      n = int(n)
+      if ms[i] != '':
+        q = p
+        p += len(ms[i])
+        if ms[i].startswith('^'): p -= 1
+        if self.is_reverse(): q = l - p
+        mm[q] = ms[i]
+      p += n
+    return mm
+
+
 def compatible_bam_iter(bamfile, trans, mis = 0, sense = True, maxNH = None, minMapQ = None, secondary = False, flank = 0): 
   '''compatible version of transReadsIter, slightly different
   '''

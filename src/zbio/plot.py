@@ -104,7 +104,7 @@ def riboShow(ax, trans, cnts, start = 0, stop = -1, ymax = None, scale = 1, col 
   for i in range(3):
     ax.bar(fx[i], fy[i], color=col[i], bottom = ymax * bottom,width=fw[i], alpha=0.2, linewidth = 0, align='edge')
   
-def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Potential ORFs in 3 reading frames', alt = True, morecds = None, morecdsbox = False, morecdslabel = None):
+def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, None], title = 'Potential ORFs in 3 reading frames', alt = True, morecds = None, morecdsbox = False, morecdslabel = None, markpept = None):
   '''plot possible ORFs
   '''
   if stop < start : stop = trans.cdna_length()
@@ -150,7 +150,14 @@ def orfShow(ax, orfs, start = 0, stop = -1, col = ['r','g','b'], cds = [None, No
         ax.bar(newcds[0], [0.4] ,color='None', bottom=2-i+0.3, width=newcds[1]-newcds[0], alpha=0.8, fill=False, edgecolor=col[i], linewidth=2, align='edge')
       if morecdslabel is not None:
         ax.text(max(newcds[0],0), 2-i+0.8, morecdslabel[j], color=col[i])
-
+  if markpept is not None:
+    for j, mc in enumerate(markpept):
+      if mc[0]>stop or mc[1]< start: continue
+      i = mc[0] % 3
+      newcds = [c - start for c in mc]
+      if newcds[0] < 0: newcds[0] = 0
+      if mc[1] > stop: newcds[1] = rlen
+      ax.bar(newcds[0], [0.2], color='k', bottom=2-i+0.4, width=newcds[1]-newcds[0], alpha=0.8, linewidth=0, align='edge')
   # start & stop codons
   lx = [[],[],[]]
   ly = [[],[],[]]
