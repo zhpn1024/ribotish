@@ -58,6 +58,24 @@ def end3(A):
   else:
     return A.stop
 
+try: cmp
+except:
+  def cmp(a, b):
+    return (a > b) - (a < b)
+
+chr_order = {'1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, '11':11, '12':12, '13':13, '14':14, '15':15, '16':16,
+             '17':17, '18':18, '19':19, '20':20, '21':21, '22':22, 'X':23, 'Y':24, 'M':25, 'MT':25,
+             'chr1':1, 'chr2':2, 'chr3':3, 'chr4':4, 'chr5':5, 'chr6':6, 'chr7':7, 'chr8':8, 'chr9':9, 'chr10':10, 'chr11':11, 'chr12':12,
+             'chr13':13, 'chr14':14, 'chr15':15, 'chr16':16, 'chr17':17, 'chr18':18, 'chr19':19, 'chr20':20, 'chr21':21, 'chr22':22,
+             'chrX':23, 'chrY':24, 'chrM':25,
+            }
+
+def chrcmp(c1, c2):
+  if c1 not in chr_order: return 1
+  if c2 not in chr_order: return -1
+  a, b = chr_order[c1], chr_order[c2]
+  return (a > b) - (a < b)
+
 
 def fa_iter(file): # also in fa.py
   id = sq = ""
