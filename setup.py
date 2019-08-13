@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#Last-modified: 12 Aug 2019
+#Last-modified: 13 Aug 2019
 
 #         Module/Scripts Description
 # 
@@ -9,8 +9,8 @@
 # under the terms of the BSD License (see the file COPYING included with
 # the distribution).
 # 
-# @status:  Alpha
-# @version: 0.2.3
+# @status:  Beta
+# @version: 0.2.4
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
                    #'bin/EVDPermutation.py',
                     ],
           classifiers=['Environment :: Console',
-                       'Development Status :: 3 - Alpha',
+                       'Development Status :: 4 - Beta',
                        'Intended Audience :: Developers',
                        'License :: OSI Approved :: GNU General Public License (GPL)',
                        'License :: Free for non-commercial use',

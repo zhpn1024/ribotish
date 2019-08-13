@@ -1,3 +1,7 @@
+2019-8-13 ribotish 0.2.4
+
+	Fix a python3 error.
+
 2019-8-12 ribotish 0.2.3
 
 	Fix problem reading NCBI gff files.
