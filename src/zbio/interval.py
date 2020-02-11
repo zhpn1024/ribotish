@@ -338,7 +338,7 @@ def allTransRegions(trans):
   return regions
 
 def str2interval(s, blocksep = ',', rangesep = '-', id = ''):
-  itvs = [map(int, b.split(rangesep)) for b in s.split(blocksep)]
+  itvs = [list(map(int, b.split(rangesep))) for b in s.split(blocksep)]
   return Interval(itvs=itvs, id=id)
 
 

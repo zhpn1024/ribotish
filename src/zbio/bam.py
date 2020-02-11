@@ -490,7 +490,9 @@ def transReadsIter(bamfile, trans, compatible = True, mis = 0, sense = True, max
   for e in trans.exons : 
     start, stop = e.start, e.stop
     if flank > 0:
-      if start == trans.start: start -= flank
+      if start == trans.start:
+        start -= flank
+        if start < 1: start = 1
       if stop == trans.stop: stop += flank
     rds = bamfile.fetch_reads(chr=chr, start=start, stop=stop, maxNH = maxNH, minMapQ = minMapQ, secondary = secondary, paired = paired)#, multiple_iterators=False)
     for read in rds: #yield read

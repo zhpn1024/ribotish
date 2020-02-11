@@ -1,6 +1,6 @@
 README for Ribo-TISH (0.2.4)
 ==================================
-<2019-8-13 Peng Zhang>
+<2019-12-9 Peng Zhang>
 
 Introduction
 ============
@@ -122,12 +122,12 @@ Range of tag length Default: 25,35. The last number (35) is not included, i.e. t
 -d DIS
 ``````
 
-Position range near start codon or stop codon Default: -40,20
+Position range near start codon or stop codon. Default: -40,20
 
 --bins BINS
 ```````````
 
-Bins for cds profile Default: 20
+Number of bins for cds profile. Default: 20
 
 --nom0
 ```````````
