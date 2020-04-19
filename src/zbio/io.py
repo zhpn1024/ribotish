@@ -9,16 +9,18 @@ def splitIter(filePath, sep = '\t', gz = False, skip = 0, title = None):
     if filePath.split('.')[-1].lower() == 'gz' : gz = True
     if gz :
       import gzip
-      infile = gzip.open(filePath, 'rb')
+      infile = gzip.open(filePath, 'rt')
     else : infile = open(filePath, 'r')
   else : infile = filePath
   for i in range(skip):
     l = next(infile)
   if title is not None : 
     l = next(infile)
+    #if gz: l = l.decode()
     lst = l.rstrip('\n').split(sep)
     title[:] = lst
   for l in infile : 
+    #if gz: l = l.decode()
     lst = l.rstrip('\n').split(sep)
     yield lst
 
@@ -28,7 +30,7 @@ def transIter(filePath, fileType = 'auto', gz = False, **kwargs):
   if filePath.split('.')[-1].lower() == 'gz' : gz = True
   if gz :
     import gzip
-    infile = gzip.open(filePath, 'rb')
+    infile = gzip.open(filePath, 'rt')
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
@@ -51,7 +53,7 @@ def geneIter(filePath, fileType = 'auto', gz = False, **kwargs):
   if filePath.split('.')[-1].lower() == 'gz' : gz = True
   if gz :
     import gzip
-    infile = gzip.open(filePath, 'rb')
+    infile = gzip.open(filePath, 'rt')
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
@@ -75,7 +77,7 @@ def transFetch(filePath, tid, fileType = 'auto', gz = False, **kwargs):
   if filePath.split('.')[-1].lower() == 'gz' : gz = True
   if gz :
     import gzip
-    infile = gzip.open(filePath, 'rb')
+    infile = gzip.open(filePath, 'rt')
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
@@ -100,7 +102,7 @@ def transSelectIter(filePath, fileType = 'auto', gz = False,  **kwargs):
   if filePath.split('.')[-1].lower() == 'gz' : gz = True
   if gz :
     import gzip
-    infile = gzip.open(filePath, 'rb')
+    infile = gzip.open(filePath, 'rt')
   else : infile = open(filePath, 'r')
   if fileType == 'auto' : fileType = suffixType(filePath, gz)
   if fileType == 'bed' :
