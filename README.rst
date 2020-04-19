@@ -1,4 +1,4 @@
-README for Ribo-TISH (0.2.4)
+README for Ribo-TISH (0.2.5)
 ==================================
 <2019-12-9 Peng Zhang>
 
