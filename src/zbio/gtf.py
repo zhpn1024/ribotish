@@ -105,6 +105,7 @@ class Exon:
       if self.gff and self.tid_c == '':
         p = self.attr('Parent')
         if p.startswith('rna-'): self.tid_c = p[4:]
+        if p.startswith('gene-'): self.tid_c = p[5:]
       return self.tid_c
   @property
   def symbol(self):
