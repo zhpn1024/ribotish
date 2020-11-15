@@ -4,8 +4,10 @@ Copyright (c) 2016 Peng Zhang <zhpn1024@163.com>
 '''
 
 def add_chr(chr):
-  if chr.isdigit() or chr in ('X','Y','M',): chr = 'chr' + chr
-  elif chr == 'MT' : chr = 'chrM' 
+  if len(chr) <= 3 and (chr.isdigit() or chr in ('X','Y',)): chr = 'chr' + chr
+  elif chr in ('M','MT','MtDNA','mitochondrion_genome','Mito') : chr = 'chrM' 
+  elif len(chr) == 2 and chr[0].isdigit(): chr = 'chr' + chr
+  elif chr in ('I','II','III','IV','V','VI','VII','VIII','IX','XI','XII','XIII','XIV','XV','XVI'): chr = 'chr' + chr
   return chr
 def rm_chr(chr):
   if chr[3:].isdigit() or chr in ('chrX','chrY'): chr = chr[3:]
@@ -102,10 +104,15 @@ class Exon:
     try : return self.tid_c
     except : 
       self.tid_c = self.attr('transcript_id')
-      if self.gff and self.tid_c == '':
-        p = self.attr('Parent')
-        if p.startswith('rna-'): self.tid_c = p[4:]
-        if p.startswith('gene-'): self.tid_c = p[5:]
+      if self.gff: # and self.tid_c == '':
+        if self.lst[2] in ('transcript', 'mRNA', 'tRNA', 'rRNA'):
+          self.tid_c = self.id
+        else:
+          p = self.attr('Parent')
+          if p.startswith('rna-'): self.tid_c = p[4:]
+          elif p.startswith('gene-'): self.tid_c = p[5:]
+          elif p.startswith('rna'): self.tid_c = p
+          elif p.startswith('gene'): self.tid_c = p
       return self.tid_c
   @property
   def symbol(self):
@@ -119,6 +126,7 @@ class Exon:
     try: return self._id
     except:
       self._id = self.attr('exon_id')
+      if self._id == '': self._id = self.attr('ID')
       return self._id
   @id.setter
   def id(self, value):
@@ -250,7 +258,8 @@ class gtfTrans(Exon):
   '''
   def __init__(self, lst, gff = False, addchr = False): 
     Exon.__init__(self, lst, gff, addchr)
-    self.id = self.tid
+    if self.tid != '': self.id = self.tid
+    elif self.id != '': self.tid_c = self.id
     #self.type = lst[1]
     self.exons = []
     self.cds = []
@@ -673,7 +682,7 @@ def gtfgene_iter(fin, filt = [], gff = False, addchr = False, chrs = None, verbo
       genes[g.id] = g
       genes2[g.id] = g
       #if g.id not in gidlist: gidlist.append(g.id)
-    elif lst[2] == 'transcript':
+    elif lst[2] in ('transcript', 'mRNA', 'tRNA', 'rRNA'):
       t = gtfTrans(lst, gff, addchr)
       if t.gid not in genes:
         g = gtfGene(lst, gff, addchr)

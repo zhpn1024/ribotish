@@ -45,6 +45,7 @@ def set_parser(parser):
   parser.add_argument("--seq", action="store_true", help="Report ORF sequences")
   parser.add_argument("--aaseq", action="store_true", help="Report amino acid sequences")
   parser.add_argument("--blocks", action="store_true", help="Report all exon block positions for predicted ORFs")
+  parser.add_argument("--inframecount", action="store_true", help="Report the sum of all counts at the in-frame positions in the ORF")
   # Reads filters
   parser.add_argument("--maxNH", type=int, default=5, help="Max NH value allowed for bam alignments (default: 5)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
@@ -71,8 +72,9 @@ def run(args):
   global tisbampaths, tisoffdict, ribobampaths, riboffdict, genomefapath, compatible, compatiblemis
   global minaalen, enrichtest, slp, paras, verbose, alt, title, tis2ribo, gfilter
   global tpth, fpth, minpth, fspth, framebest, framelocalbest, longest, transprofile, TIS_types #fspth
-  global paired, seq, aaseq, blocks # showtime
+  global paired, seq, aaseq, blocks, inframecount # showtime
   paired, seq, aaseq, blocks = args.paired, args.seq, args.aaseq, args.blocks
+  inframecount = args.inframecount
   ribo.maxNH, ribo.minMapQ, ribo.secondary = args.maxNH, args.minMapQ, args.secondary
   tisbampaths = args.tisbampaths
   ribobampaths = args.ribobampaths
@@ -282,6 +284,7 @@ def run(args):
   if seq : s += '\tSeq'
   if aaseq : s += '\tAASeq'
   if blocks: s += '\tBlocks'
+  if inframecount: s += '\tInFrameCount'
   s += '\n'
   outfile.write(s)
 
@@ -302,6 +305,7 @@ def run(args):
     if seq : s += '\t' + e.sq
     if aaseq : s += '\t' + e.aa
     if blocks: s += '\t' + e.blocks
+    if inframecount: s += '\t{}'.format(e.inframecount)
     s += '\n'
     if allout is not None : allout.write(s)
     if e.q <= args.fsqth : outfile.write(s) # "%s\t%d\n" % (e, e.length)) #, e.sq))
@@ -422,6 +426,7 @@ def _pred_gene(ps): ### trans
         if tp is not None and fsp > fspth : continue
         has_stop = tsq[stop-3:stop] in orf.cstop
         e = getResult(t, tis, stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tp, rp, 'N', fsp], has_stop)
+        if inframecount: e.inframecount = sum(tribo.cnts[tis:stop:3])
         es.append(e)
 
     else : #all possible ORFs
@@ -461,6 +466,7 @@ def _pred_gene(ps): ### trans
           fsp, fss = stat.fisher_method([tps[i], rps[i]]) #
           if fsp > fspth : continue
           e = getResult(t, tis, o.stop, cds1, cds2, tsq, [ip, ttis.cnts[tis], tps[i], rps[i], rst[i], fsp], o.has_stop_codon)
+          if inframecount: e.inframecount = sum(tribo.cnts[tis:o.stop:3])
           #tistype = tisType(tis, o.stop, cds1, cds2)
           #orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3],tis,o.stop)
           #tid = "%s\t%s\t%s\t%s\t%s:%d-%d:%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, t.chr, t.genome_pos(tis), t.genome_pos(o.stop), t.strand, orfstr, tistype)
@@ -481,7 +487,7 @@ def _pred_gene(ps): ### trans
 def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   tistype = tisType(tis, stop, cds1, cds2)
   orfstr = '{}\t{}\t{}'.format(tsq[tis:tis+3], tis, stop)
-  gtis, gstop = t.genome_pos(tis), t.genome_pos(stop)
+  gtis, gstop = t.genome_pos(tis, bias=1), t.genome_pos(stop, bias=0)
   if t.strand != '-' : genomestr = '{}:{}-{}:{}'.format(t.chr, gtis, gstop, t.strand)
   else : genomestr = '{}:{}-{}:{}'.format(t.chr, gstop, gtis, t.strand)
   tid = "%s\t%s\t%s\t%s\t%s\t%s\t%s" % (t.gid, t.id, t.symbol, t.genetype, genomestr, orfstr, TIS_types[tistype])

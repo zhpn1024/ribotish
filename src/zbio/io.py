@@ -9,8 +9,11 @@ def splitIter(filePath, sep = '\t', gz = False, skip = 0, title = None, encoding
     if filePath.split('.')[-1].lower() == 'gz' : gz = True
     if gz :
       import gzip
-      infile = gzip.open(filePath, 'rt', encoding=encoding)
-    else : infile = open(filePath, 'r', encoding=encoding)
+      try: infile = gzip.open(filePath, 'rt', encoding=encoding)
+      except: infile = gzip.open(filePath)
+    else :
+      try: infile = open(filePath, 'r', encoding=encoding)
+      except: infile = open(filePath)
   else : infile = filePath
   for i in range(skip):
     l = next(infile)

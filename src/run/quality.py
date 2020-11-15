@@ -23,6 +23,7 @@ def set_parser(parser):
   parser.add_argument("--bins", type=int, default=20, help="Bins for cds profile (default: 20)")
   parser.add_argument("--nom0", action="store_true", help="Do not consider reads with mismatch at position 0 as a new group")
   parser.add_argument("--th", type=float, default=0.5, help="Threshold for quality (default: 0.5)")
+  parser.add_argument("--end3", action="store_true", help="Plot 3' end profile")
   # Reads filters
   parser.add_argument("--maxNH", type=int, default=1, help="Max NH value allowed for bam alignments (default: 1)")
   parser.add_argument("--minMapQ", type=float, default=1, help="Min MapQ value required for bam alignments (default: 1)")
@@ -217,12 +218,14 @@ def frange(start=0,stop=1,step=1):
     lst.append(i)
     i += step
   return lst
-def stdisplot(ax, x, y, lab = '', hali = 'left', vali = 'top', frame = 3, f0 = 0, color = ['r','g','b'], size='medium', tcol = 'k'):
+def stdisplot(ax, x, y, lab = '', hali = 'left', vali = 'top', frame = 3, f0 = 0, color = ['r','g','b'], size='medium', tcol = 'k', shift = 0):
   for i in range(frame):
     i0 = (f0 + i) % frame
-    ax.bar(x[i0::frame], y[i0::frame], width = 0.6, color = color[i], edgecolor = color[i],alpha=0.6, align='edge')
+    xs = [n + shift for n in x[i0::frame]]
+    ax.bar(xs, y[i0::frame], width = 0.6, color = color[i], edgecolor = color[i],alpha=0.6, align='edge')
   if hali == 'left' : tx = min(x)
   else : tx = max(x)
+  tx += shift
   ty = nearest(max(y+[1]), up=False) ##
   ax.text(tx ,max(y+[1])*0.7 , lab,horizontalalignment=hali,verticalalignment=vali, size=size, color = tcol)
   ax.spines['right'].set_visible(False)
@@ -267,6 +270,9 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
     if m0 : ax0.yaxis.set_label_coords(-0.9, 0.4)
     else : ax0.yaxis.set_label_coords(-0.4, 0.4)
 
+  shift = 0
+  if args.end3: shift = l
+
   if args.tis : 
     use, tisframe, tistxt, mp = ribo.TISquality(dis1[l], dis = args.dis, threshold = args.th)
     if tisframe != frame : use = False
@@ -284,16 +290,16 @@ def plot4(gs, i, l, disf, dis1, dis2, disc, offdict, args, start = 0):
   if use : tcol = fbcols[frame]
   ax1 = plot.subplot(gs[i, start+1:start+3])
   x = list(range(*args.dis))
-  stdisplot(ax1, x, dis1[l], lab = txt, hali = 'left', f0 = -args.dis[0], color=fbcols, tcol = tcol)
+  stdisplot(ax1, x, dis1[l], lab = txt, hali = 'left', f0 = -args.dis[0], color=fbcols, tcol = tcol, shift = shift)
   
   if use and not args.tis : 
-    plot.hlines(th, -18, -6, color=tcol, linestyles ='dashed')
+    plot.hlines(th, -18+shift, -6+shift, color=tcol, linestyles ='dashed')
   if args.tis : 
     #mp = ribo.getTIS(dis1[l], [d1,d2])
-    ax1.text(mp+1 ,max(dis1[l]+[1])*0.7 , tistxt, horizontalalignment='left',verticalalignment='top', size='medium', color = tcol)
+    ax1.text(mp+1+shift, max(dis1[l]+[1])*0.7 , tistxt, horizontalalignment='left',verticalalignment='top', size='medium', color = tcol)
   ax2 = plot.subplot(gs[i, start+3:start+5])
   
-  stdisplot(ax2, x, dis2[l], lab = '', hali = 'right', f0 = -args.dis[0], color=fbcols, tcol = tcol)
+  stdisplot(ax2, x, dis2[l], lab = '', hali = 'right', f0 = -args.dis[0], color=fbcols, tcol = tcol, shift = shift)
   ax3 = plot.subplot(gs[i, start+5])
   cdsplot(ax3, disc[l])
   if args.tis : 
