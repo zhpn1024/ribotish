@@ -10,7 +10,7 @@
 # the distribution).
 # 
 # @status:  Beta
-# @version: 0.2.5
+# @version: 0.2.6
 # @author:  Peng Zhang
 # @contact: zhpn1024@163.com
 

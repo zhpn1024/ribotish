@@ -23,6 +23,7 @@ def faIter(file, protein = False):
 def rc(seq):
   '''reverse complement
   '''
+  if seq is None: return None
   comps = {'A':"T", 'C':"G", 'G':"C", 'T':"A",
        'B':"V", 'D':"H", 'H':"D", 'K':"M",
        'M':"K", 'R':"Y", 'V':"B", 'Y':"R",
@@ -32,7 +33,7 @@ def rc(seq):
 def changechr(chr):
   '''change between two chr versions
   '''
-  if chr.isdigit() or chr in ('X','Y','M'): return 'chr' + chr
+  if chr[0].isdigit() or chr in ('X','Y','M'): return 'chr' + chr
   elif chr == 'MT' : return 'chrM'
   elif chr == 'chrM' : return 'MT'
   elif chr[0:3] == 'chr' : return chr[3:]

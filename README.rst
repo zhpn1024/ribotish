@@ -1,6 +1,6 @@
-README for Ribo-TISH (0.2.5)
+README for Ribo-TISH (0.2.6)
 ==================================
-<2019-12-9 Peng Zhang>
+<2020-11-15 Peng Zhang>
 
 Introduction
 ============
@@ -138,6 +138,11 @@ Not consider reads with mismatch at position 0 (5' end mismatch) as a new group.
 ```````
 
 Threshold for quality. Default: 0.5. Group that frame bias ratio < TH will be considered as low quality and this group of reads will not be used in further analysis. The offset for low quality groups will not be set in parameter file.
+
+--end3
+``````````
+
+Plot RPF 3' end profile instead of 5' end.
 
 --colorblind
 ````````````
@@ -440,6 +445,12 @@ Report amino acid sequences.
 ````````
 
 Report all exon block positions for predicted ORFs. Format: start1-stop1,start2-stop2,...startN-stopN. In chromosome direction.
+
+--inframecount
+``````````````
+
+Report the sum of all counts at the in-frame positions in the ORF.
+
 
 Output files
 ------------

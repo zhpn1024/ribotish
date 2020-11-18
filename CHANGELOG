@@ -1,3 +1,13 @@
+2020-11-15 ribotish 0.2.6
+
+	Add --inframecount option in predict to report in-frame RPF counts.
+
+	Add --end3 option in quality to plot 3' end profiles.
+
+	Fix gff problems.
+
+	Fix problem of genome position at the start/stop of downstream/upstream exon.
+
 2020-4-19 ribotish 0.2.5
 
 	Fix negative start error.
