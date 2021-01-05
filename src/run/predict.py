@@ -124,7 +124,7 @@ def run(args):
     if args.inestpath is None : 
       path = args.tisbampaths[0] + '.bgest.txt'
       if isfile(path) : args.inestpath = path
-      else : args.estpath = path
+      elif args.estpath is None or args.estpath == '' : args.estpath = path
   if args.agenepath is None : args.agenepath = args.genepath
 
   # load genome, fasta file indexing
@@ -152,16 +152,17 @@ def run(args):
         Process = NoDaemonProcess
 
       pool = MyPool(1) # This is for memory efficiency
-      paras, slp, data = pool.apply(ribo.estimateTISbg, args=(args.agenepath, args.tisbampaths, args.genomefapath), kwds={'parts': parts, 'offdict': tisoffdict, 'numProc': args.numProc, 'verbose': args.verbose, 'geneformat': args.geneformat, 'harrwidth': harrwidth, 'paired': paired})
+      paras, slp, data = pool.apply(ribo.estimateTISbg, args=(args.agenepath, args.tisbampaths, args.genomefapath), kwds={'parts': parts, 'offdict': tisoffdict, 'alt_tis': alt, 'numProc': args.numProc, 'verbose': args.verbose, 'geneformat': args.geneformat, 'harrwidth': harrwidth, 'paired': paired})
       pool.close()
     else : 
-      paras, slp, data = ribo.estimateTISbg(args.genepath, args.tisbampaths, args.genomefapath, parts = parts, offdict = tisoffdict, numProc = 1, verbose = verbose, geneformat = args.geneformat, harrwidth = harrwidth, paired = paired)
+      paras, slp, data = ribo.estimateTISbg(args.genepath, args.tisbampaths, args.genomefapath, parts = parts, offdict = tisoffdict, alt_tis=alt, numProc = 1, verbose = verbose, geneformat = args.geneformat, harrwidth = harrwidth, paired = paired)
     estfile = open(args.estpath, 'w')
     for i in range(len(parts)):
       estfile.write("{}\t{}\t{}\t{}\t{}\n".format(paras[i][0], paras[i][1], parts[i], slp[i], data[i]))
     estfile.close()
     
   else : 
+    print("Loading TIS background file {}...".format(args.inestpath))
     inestfile = open(args.inestpath, 'r')
     paras, slp = [], []
     for l in inestfile:
