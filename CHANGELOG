@@ -1,3 +1,7 @@
+2021-3-15 ribotish 0.2.7
+
+	Fix alt TIS background problem.
+
 2020-11-15 ribotish 0.2.6
 
 	Add --inframecount option in predict to report in-frame RPF counts.
