@@ -462,7 +462,7 @@ The output is a txt file all possible ORF results that fit the thresholds. Some 
 :GenomePos:	Genome position and strand of TIS site, 0 based, half open
 :Start:		TIS of the ORF on transcript
 :Stop:		3' end of stop codon on transcript
-:TisType:	Relative position of this TIS to annotated ORF of the transcript. 'Novel' if no ORF annotation. ':Known' means the TIS is annotated in another transcript. ':CDSOverlap' means the ORF overlaps with annotated CDS in another transcript in the same reading frame.
+:TisType:	Relative position of this TIS to annotated ORF of the transcript. 'Novel' if no ORF annotation. ':Known' means the TIS is annotated in another transcript. ':CDSFrameOverlap' means the ORF overlaps with annotated CDS in another transcript in the same reading frame.
 :TISGroup:	Group of the transcript for TIS background estimation
 :TISCount:	Number of reads with P-site at TIS site
 :TISPvalue:	One tailed negative binomial test p-value for TISCount (TIS test)
