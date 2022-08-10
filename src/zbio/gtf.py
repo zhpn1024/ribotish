@@ -391,12 +391,11 @@ class gtfTrans(Exon):
     sc = self.stop_codon # Determine by stop codon
     if len(sc) != 3 : 
       for e in self.exons:
-        if sc.end3 == e.end3 : 
+        if sc.end5 == e.end5 : break
+        elif sc.end3 == e.end3 : # bug elif 
           cs = self.cdna_pos(sc.end5) + 3
           if cdna : return cs
           else : return self.genome_pos(cs, 0)
-        if sc.end5 == e.end5 :
-          break
       else : 
         print('Stop codon error : %s %s %s' % (self.gid, self.id, sc.short_str()))
     gs = sc.end3
