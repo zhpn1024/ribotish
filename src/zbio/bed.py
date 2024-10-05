@@ -552,7 +552,8 @@ def bed12_fetch(file, id, bin = False, verbose = False):
 
 class refGene(Bed12): # start with bins
   def __init__(self, x):
-    l = x.strip().split('\t')
+    if type(x) == list: l = x
+    else: l = x.strip().split('\t')
     self.exonStarts = com2tup(l[9])
     self.exonEnds = com2tup(l[10])
     start = int(l[4])

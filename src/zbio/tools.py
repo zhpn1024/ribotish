@@ -213,6 +213,7 @@ def overlap_iter(bedIterA, bedIterB, func=overlap, ignoreStrand = True, chrcmp =
       else: break
       lst.append(a)
     if c == 0 : Aend = True
+    if Aend and len(lst) == 0: break
     #print len(lst)
 
 def rand_overlap_iter(bedIterA, bedListB, func=overlap, ignoreStrand = True): # ListB should have no overlap
@@ -358,7 +359,40 @@ def non_overlap_lists(lst):
     nolists.append([b])
   return nolists
 
+def range_to_bins(start, end):
+  binOffsets = [512+64+8+1, 64+8+1, 8+1, 1, 0]
+  binFirstShift = 17    # How much to shift to get to finest bin.
+  binNextShift = 3     # How much to shift to get to next larger bin.
+  startBin = start
+  endBin = end - 1
+  startBin >>= binFirstShift
+  endBin >>= binFirstShift
+  for bo in binOffsets:
+    if startBin == endBin: return bo + startBin
+    startBin >>= binNextShift
+    endBin >>= binNextShift
+
+def bins_overlap_range(start, end):
+  binOffsets = [512+64+8+1, 64+8+1, 8+1, 1, 0]
+  binFirstShift = 17    # How much to shift to get to finest bin. 
+  binNextShift = 3     # How much to shift to get to next larger bin. 
+  bins = []
+  startBin = start
+  endBin = end - 1
+  startBin >>= binFirstShift
+  endBin >>= binFirstShift
+  for bo in binOffsets:
+    for j in range(startBin, endBin+1):
+      bins.append(bo + j);
+    startBin >>= binNextShift
+    endBin >>= binNextShift
+  return bins;
 
 
+def numround(f, r1 = 4, r2 = 2):
+  f = float(f)
+  if f == 0: return '0.0'
+  if abs(f) < 0.001: return ('%.{}e'.format(r2) % (f)) .replace('e-0', 'e-')
+  return '%.{}f'.format(r1) % (f)
 
 

@@ -1038,3 +1038,31 @@ class betaBinom:
       #p = self.pmf(n, k)
       #return 1 - cdf + p
 
+def hw_exact_test(n, m, k, alt = 'two.tailed'): #pass
+  p = 0
+  for i in range(m+1):
+    p += hypergeo(n*2, n, m, i) * hypergeo_test(n, i, m-i, k, alt=alt)
+  return p
+
+def HWtest(AA, Aa, aa):
+  n = float(AA + Aa + aa)
+  if n == 0: return 1, 0
+  pA = (2*AA + Aa)/(2*n)
+  pa = 1 - pA # (Aa + 2*aa)/(2*n)
+  EAA = n*(pA**2)
+  EAa = n*(2*pA*pa)
+  Eaa = n*(pa**2)
+  #if aa > Eaa: return 1 # only test excess het
+  if (EAA>=5) and (EAa>=5) and (Eaa>=5) and n>=40:
+    chisqr = ((AA-EAA)**2)/EAA + ((Aa-EAa)**2)/EAa + ((aa-Eaa)**2)/Eaa
+    p = chi2.sf(chisqr, 1)
+  else:
+    m = 2*aa + Aa
+    n = int(n)
+    #if aa > Eaa: p = 2 * chunhe_test(n, m, aa, alt='g')
+    if aa > Eaa: p = 2 * hw_exact_test(n, m, aa, alt='g')
+    else: p = 2 * hw_exact_test(n, m, aa, alt='l')
+    #p = 2 * hw_exact_test(n, m, aa, alt='l')
+    if p > 1: p = 1
+  return p, EAa
+

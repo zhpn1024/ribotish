@@ -376,6 +376,9 @@ def _pred_gene(ps): ### trans
 
   for t in g.trans:
     #if candidates is not None and t.id not in candidates : continue
+    if t.strand not in ('+', '-'):
+      print('Warning: transcript {} {} {} strand "{}" unknown! '.format(t.gid, t.id, t.symbol, t.strand))
+      continue
     tl = t.cdna_length()
     if tl < ribo.minTransLen : continue # return es, j, tpfs, g ##
     #ttis = ribo.multiRibo(t, tisbampaths, offdict = tisoffdict, compatible = compatible)
@@ -495,7 +498,7 @@ def getResult(t, tis, stop, cds1, cds2, tsq, values, has_stop = True):
   e = exp.Exp(tid, values)
   e.length = (stop - tis) / 3 - 1
   if not has_stop : e.length += 1
-  if seq : e.sq = tsq[tis:stop]
+  if seq or aaseq : e.sq = tsq[tis:stop]
   if aaseq : e.aa = orf.translate(e.sq)
   if blocks: 
     oi = interval.trans2interval(t, tis, stop)
