@@ -224,7 +224,7 @@ def run(args):
   title = ['TISGroup', 'TISCounts', 'TISPvalue', 'RiboPvalue', 'RiboPStatus']
   j = [0,0] # total number of ORF/TIS for BH correction
   gene_iter = io.geneIter(args.genepath, fileType = args.geneformat, verbose = args.verbose) # chrs = genome.idx
-  para_iter = genePara(gene_iter, inorf, inprofile)
+  para_iter = genePara(gene_iter, inorf, inprofile, args.igenomepos)
   if args.numProc <= 1 : pred_iter = imap(_pred_gene, para_iter)
   else : 
     #from multiprocessing import Pool
@@ -320,7 +320,7 @@ def check_overlap(e, known_tis, cds_regions) :
       its = e.cr[i].intersect(cds_regions[i])
       if its.rlen() > 0 : return ':CDSFrameOverlap'
 
-def genePara(gene_iter, inorf, inprofile):
+def genePara(gene_iter, inorf, inprofile, igenomepos = False):
   '''Generate parameters (gene, candidates/None, profile) for function _pred_gene()
   '''
   if inorf is not None :
@@ -329,7 +329,19 @@ def genePara(gene_iter, inorf, inprofile):
       if inprofile is not None and g.id in inprofile : pf = inprofile[g.id]
       cand = {}
       for t in g.trans:
-        if t.id in inorf : cand[t.id] = inorf[t.id] #yield t, inorf[t.id]
+        if t.id not in inorf: continue
+        if not igenomepos: cand[t.id] = inorf[t.id] #yield t, inorf[t.id]
+        else:
+          c = []
+          for tis, stop in inorf[t.id]:
+            gtis, gstop = tis, stop
+            tis, stop = t.cdna_pos(tis), t.cdna_pos(stop)
+            if tis is None or stop is None:
+              print('Warning: skip input genome position not in transcript: {} {} {} {} {}'.format(t.id, gtis, gstop, tis, stop))
+              continue
+            if stop < tis: tis, stop = stop, tis
+            c.append([tis, stop])
+          cand[t.id] = c
       #if len(cand) > 0 : 
       yield g, cand, pf
   else :
@@ -416,9 +428,6 @@ def _pred_gene(ps): ### trans
     if candidates is not None : 
       if t.id not in candidates : continue
       for tis, stop in candidates[t.id]:
-        if args.igenomepos:
-          tis, stop = t.cdna_pos(tis), t.cdna_pos(stop)
-        if stop < tis: tis, stop = stop, tis
         j[0] += 1
         j[1] += 1
         if has_tis : tp = ttis.tis_test(tis, paras[ip][0], paras[ip][1])
