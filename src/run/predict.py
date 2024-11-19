@@ -13,6 +13,7 @@ def set_parser(parser):
   parser.add_argument("-o", type=str, dest="output", default='predict.txt', required=True, help="Output result file")
   #### alt input options ####
   parser.add_argument("-i", type=str, dest="input", help="Only test input candidate ORFs, format: transID start stop (0 based, half open)")
+  parser.add_argument("--igenomepos", action="store_true", help="The start and end in -i input file are genome positions")
   parser.add_argument("--geneformat", type=str, default='auto', help="Gene annotation file format (gtf, bed, gpd, gff, default: auto)")
   parser.add_argument("--tispara", type=strlist, help="Input offset parameter files for -t bam files")
   parser.add_argument("--ribopara", type=strlist, help="Input offset parameter files for -b bam files")
@@ -415,6 +416,9 @@ def _pred_gene(ps): ### trans
     if candidates is not None : 
       if t.id not in candidates : continue
       for tis, stop in candidates[t.id]:
+        if args.igenomepos:
+          tis, stop = t.cdna_pos(tis), t.cdna_pos(stop)
+        if stop < tis: tis, stop = stop, tis
         j[0] += 1
         j[1] += 1
         if has_tis : tp = ttis.tis_test(tis, paras[ip][0], paras[ip][1])

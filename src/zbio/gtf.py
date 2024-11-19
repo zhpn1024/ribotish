@@ -96,7 +96,7 @@ class Exon:
   def gid(self):
     try : return self.gid_c # gid cache
     except : 
-      if self.gff : self.gid_c = self.attr('GeneID')
+      if self.gff and self.attr('GeneID') != '' : self.gid_c = self.attr('GeneID')
       else : self.gid_c = self.attr('gene_id')
     return self.gid_c
   @property

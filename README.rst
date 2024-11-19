@@ -277,7 +277,12 @@ Only test input candidate ORFs, format:
 transID  start  stop 
 =======  =====  =====
 
-Start, stop position is 0 based, half open. Stop - start should be multiples of 3. Transcript should be found in gene annotation file.
+Start and stop are relative positions to transcript full length and are 0 based, half open. The position 0 is the first base of 5'UTR. Stop - start should be multiples of 3. Use ```--igenomepos``` if your start and stop are genome positions. Transcript should be found in gene annotation file.
+
+--igenomepos
+````````````
+
+The positions in ```-i``` input file are genome positions.
 
 --geneformat GENEFORMAT
 ```````````````````````
