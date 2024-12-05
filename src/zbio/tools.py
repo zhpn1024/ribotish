@@ -389,10 +389,19 @@ def bins_overlap_range(start, end):
   return bins;
 
 
-def numround(f, r1 = 4, r2 = 2):
+def numround(f, r1 = 4, r2 = 2, exact = False):
   f = float(f)
   if f == 0: return '0.0'
-  if abs(f) < 0.001: return ('%.{}e'.format(r2) % (f)) .replace('e-0', 'e-')
-  return '%.{}f'.format(r1) % (f)
+  if abs(f) < 0.001:
+    s = ('%.{}e'.format(r2) % (f)) .replace('e-0', 'e-')
+    if not exact:
+      s = s.replace('0e', 'e')
+      s = s.replace('.e', '.0e')
+  else:
+    s = '%.{}f'.format(r1) % (f)
+    if not exact:
+      s = s.rstrip('0')
+      if s.endswith('.'): s += '0'
+  return s
 
 

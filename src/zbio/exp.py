@@ -263,5 +263,37 @@ class ReadDict(dict):
       s += "%d:%d, " % (k, self[k])
     s = s.rstrip(', ') + '}'
     return s
-
-        
+  def variance(self, correction = True):
+    m = self.mean()
+    n = self.size()
+    s = sum([self[i] * i * i for i in self])
+    s -= n * m * m
+    if correction: return s / (n-1)
+    else: return s / n
+  def expand(self):
+    d = []
+    for i in sorted(self):
+      d += [i] * self[i]
+    return d
+  def down_sample(self, n, seed = None):
+    if n > self.size(): return self
+    import random
+    if seed is not None: random.seed(seed)
+    d = self.expand()
+    random.shuffle(d)
+    ds = ReadDict()
+    for i in range(n): ds.record(d[i])
+    return ds
+  def down_sample_even(self, n):
+    ns = self.size()
+    if n >= ns: return self
+    d = self.expand()
+    ds = ReadDict()
+    step = float(ns) / n
+    i1 = 0.5 * step
+    for i in range(n):
+      #i1 = int((i + 0.5) * ns / n)
+      ni = int(i1)
+      ds.record(d[ni])
+      i1 += step
+    return ds

@@ -156,7 +156,7 @@ def run(args):
       paras, slp, data = pool.apply(ribo.estimateTISbg, args=(args.agenepath, args.tisbampaths, args.genomefapath), kwds={'parts': parts, 'offdict': tisoffdict, 'alt_tis': alt, 'numProc': args.numProc, 'verbose': args.verbose, 'geneformat': args.geneformat, 'harrwidth': harrwidth, 'paired': paired})
       pool.close()
     else : 
-      paras, slp, data = ribo.estimateTISbg(args.genepath, args.tisbampaths, args.genomefapath, parts = parts, offdict = tisoffdict, alt_tis=alt, numProc = 1, verbose = verbose, geneformat = args.geneformat, harrwidth = harrwidth, paired = paired)
+      paras, slp, data = ribo.estimateTISbg(args.agenepath, args.tisbampaths, args.genomefapath, parts = parts, offdict = tisoffdict, alt_tis=alt, numProc = 1, verbose = verbose, geneformat = args.geneformat, harrwidth = harrwidth, paired = paired)
     estfile = open(args.estpath, 'w')
     for i in range(len(parts)):
       estfile.write("{}\t{}\t{}\t{}\t{}\n".format(paras[i][0], paras[i][1], parts[i], slp[i], data[i]))
