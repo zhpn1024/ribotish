@@ -23,9 +23,11 @@ def splitIter(filePath, sep = '\t', gz = False, skip = 0, title = None, encoding
       except: infile = open(filePath)
   else : infile = filePath
   for i in range(skip):
-    l = next(infile)
+    try: l = next(infile)
+    except StopIteration: return []
   if title is not None : 
-    l = next(infile)
+    try: l = next(infile)
+    except StopIteration: return []
     #if gz: l = l.decode()
     lst = l.rstrip('\n').split(sep, maxsplit)
     title[:] = lst
@@ -211,6 +213,9 @@ def tabjoin(a, *args): #, sep = '\t'):
     arr = arr[:-1]
   return sep.join(arr)
 
+def tabjoinl(a, *args):
+  return tabjoin(a, *args) + '\n'
+
 '''
 并行处理输入的迭代器，p < 1 时为单线程，结果为skip时跳过
 需自定义process函数process(i, args)，适用于process耗时的场景
@@ -252,8 +257,20 @@ class OrderedList:
     self.i = 0
     self.l = len(self.data)
 
+  def __repr__(self):
+    s = 'OrderedList:len={}'.format(self.l)
+    if self.l > 0:
+      s += ':{}..{}'.format(self.data[0], self.data[-1])
+    return s
+
   def __len__(self):
     return self.l
+
+  def current(self):
+    if self.i == self.l: self.i -= 1
+    if self.i < 0: self.i = 0
+    try: return self.data[self.i]
+    except: return None
 
   def check(self):
     self.data.sort()
@@ -261,9 +278,18 @@ class OrderedList:
     self.l = len(self.data)
 
   def find(self, a):
-    while self.i < self.l and self.data[self.i] < a:
-      self.i += 1
-    if self.i == self.l: return False
+    if a is None: return False
+    c = self.current()
+    if c == a: return True
+    if c < a:
+      while self.i < self.l and self.data[self.i] < a:
+        self.i += 1
+      if self.i == self.l: return False
+    else:
+      #print('back {} {} {}'.format(c, a, self.i))
+      while self.i > 0 and self.data[self.i] > a:
+        self.i -= 1
+      #if self.i < 0: return False
     if self.data[self.i] == a: return True
     else: return False
 

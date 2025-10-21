@@ -1,3 +1,11 @@
+2025-10-21 ribotish 0.2.8
+
+	Add transplot module to plot RPF profiles in a transcript.
+
+	Add --igenomepos option for -i INPUT file if start and stop are genome positions in predict module.
+
+	Fix bugs for stop codon, stat logarr and multiprocessing
+
 2021-3-15 ribotish 0.2.7
 
 	Fix alt TIS background problem.

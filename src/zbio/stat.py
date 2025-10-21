@@ -7,8 +7,8 @@ import math
 from scipy.stats import nbinom, chisquare # chisqprob
 from scipy.stats import chi2
 from scipy.special import betaln, betainc, gammaln
-#logarr = [None] # log(N)
-#logsumarr = [0] # log(N!)
+logarr = [None] # log(N)
+logsumarr = [0] # log(N!)
 def logsum(n): # log(N!)
   return gammaln(n+1)
 def logarr_ext(n) : #, logarr = logarr, logsumarr = logsumarr): # prepare log values

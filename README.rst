@@ -1,6 +1,6 @@
-README for Ribo-TISH (0.2.6)
+README for Ribo-TISH (0.2.8)
 ==================================
-<2020-11-15 Peng Zhang>
+<2025-10-21 Peng Zhang>
 
 Introduction
 ============
